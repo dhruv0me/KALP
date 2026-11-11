@@ -11,6 +11,8 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .site-header { position: sticky; top: 0; z-index: 40; background: #fbfcf8; border-bottom: 1px solid #e5e9df; }
 .nav-inner { max-width: 1440px; margin: auto; height: 82px; padding: 0 6%; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: #173e2f; font-size: 20px; font-weight: 800; letter-spacing: -1.15px; line-height: 1; white-space: nowrap; }
+.brand-logo-img { height: 48px; width: auto; display: block; object-fit: contain; }
+.footer .brand-logo-img { height: 58px; }
 .brand-light { font-weight: 400; }
 .brand small { display: block; font-size: 7px; letter-spacing: 1.55px; font-weight: 700; margin-top: 5px; }
 .brand-mark { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; transform: rotate(-10deg); }
@@ -227,6 +229,7 @@ em { font-weight: 400; color: #789d65; }
 
 @media(max-width: 760px) {
   .nav-inner { height: 70px; padding: 0 6%; }
+  .brand-logo-img { height: 38px; }
   .nav-links { display: none; position: absolute; left: 0; right: 0; top: 70px; background: #fbfcf8; padding: 24px 6%; align-items: flex-start; flex-direction: column; box-shadow: 0 15px 20px #1b382315; border-bottom: 1px solid #e5e9df; gap: 16px; }
   .nav-links.open { display: flex; }
   .mobile-nav-actions { display: block; width: 100%; padding-top: 12px; border-top: 1px solid #e5e9df; }

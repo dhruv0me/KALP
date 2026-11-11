@@ -6,8 +6,8 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import { Link } from "react-router";
-import { HeroSection } from "@/components/HeroSection";
-import { PlatformStats } from "@/components/PlatformStats";
+import { HeroSection } from "@/components/home/HeroSection";
+import { PlatformStats } from "@/components/home/PlatformStats";
 import { usePlatformStats } from "@/hooks/use-campaigns";
 
 export function meta() {

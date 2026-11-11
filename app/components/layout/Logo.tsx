@@ -1,3 +1,4 @@
+import { appPath } from "@agent-native/core/client/api-path";
 import { Link } from "react-router";
 
 interface LogoProps {
@@ -12,17 +13,12 @@ export function Logo({ onClick }: LogoProps) {
       className="brand"
       aria-label="KALP — Transparent Campus Crowdfunding home"
     >
-      <span className="brand-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-      </span>
-      <span>
-        KALP
-        <small>TRANSPARENT CAMPUS FUNDING</small>
-      </span>
+      <img
+        src={appPath("/kalp-logo.png")}
+        alt="KALP"
+        className="brand-logo-img"
+      />
+      <span className="sr-only">KALP — Transparent Campus Funding</span>
     </Link>
   );
 }
-

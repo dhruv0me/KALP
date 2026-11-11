@@ -1,10 +1,10 @@
 import { HeaderActionsProvider } from "@agent-native/toolkit/app-shell";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router";
-import { BackToTop } from "@/components/BackToTop";
-import { CursorTrail } from "@/components/CursorTrail";
-import { Footer } from "@/components/Footer";
-import { Navbar, scrollToSectionId } from "@/components/Navbar";
+import { BackToTop } from "@/components/layout/BackToTop";
+import { CursorTrail } from "@/components/layout/CursorTrail";
+import { Footer } from "@/components/layout/Footer";
+import { Navbar, scrollToSectionId } from "@/components/layout/Navbar";
 import { LanguageProvider } from "@/hooks/use-language";
 
 interface LayoutProps {

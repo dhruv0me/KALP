@@ -15,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useSession } from "@/hooks/use-session";

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router";
-import { Logo } from "@/components/Logo";
-import { scrollToSectionId } from "@/components/Navbar";
+import { Logo } from "@/components/layout/Logo";
+import { scrollToSectionId } from "@/components/layout/Navbar";
 import { useLanguage } from "@/hooks/use-language";
 
 export function Footer() {

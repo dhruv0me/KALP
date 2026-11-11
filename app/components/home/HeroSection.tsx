@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { scrollToSectionId } from "@/components/Navbar";
+import { scrollToSectionId } from "@/components/layout/Navbar";
 import { useLanguage } from "@/hooks/use-language";
 
 interface HeroSectionProps {

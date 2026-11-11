@@ -1,4 +1,4 @@
-import { CampaignCard } from "@/components/CampaignCard";
+import { CampaignCard } from "@/components/campaigns/CampaignCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Campaign } from "@/lib/campaigns";
 

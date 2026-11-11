@@ -1,14 +1,14 @@
 import { IconArrowUpRight } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { CampaignFilters } from "@/components/CampaignFilters";
+import { CampaignFilters } from "@/components/campaigns/CampaignFilters";
 import {
   CampaignGrid,
   CampaignGridSkeleton,
-} from "@/components/CampaignGrid";
-import { CampaignSearch } from "@/components/CampaignSearch";
-import { CountryFilter } from "@/components/CountryFilter";
-import { EmptyState } from "@/components/EmptyState";
+} from "@/components/campaigns/CampaignGrid";
+import { CampaignSearch } from "@/components/campaigns/CampaignSearch";
+import { CountryFilter } from "@/components/campaigns/CountryFilter";
+import { EmptyState } from "@/components/common/EmptyState";
 import { useCampaigns } from "@/hooks/use-campaigns";
 import {
   getCountryOptions,

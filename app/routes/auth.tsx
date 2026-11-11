@@ -1,3 +1,4 @@
+import { appPath } from "@agent-native/core/client/api-path";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { SignInCard2 } from "@/components/ui/sign-in-card-2";
@@ -31,11 +32,12 @@ export default function AuthRoute() {
     <SignInCard2
       appName="KALP"
       brandInitial="K"
+      logoSrc={appPath("/kalp-logo.png")}
       initialMode={initialMode}
       signUpTo="/auth?mode=signup"
       signInTo="/auth"
       backTo="/"
-      backLabel="Back to KALP"
+      skipLabel="Skip for now"
       googleEnabled={Boolean(googleUrl)}
       onGoogleSignIn={
         googleUrl ? () => window.location.assign(googleUrl) : undefined

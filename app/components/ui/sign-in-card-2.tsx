@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Link } from "react-router";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   AnimatePresence,
   motion,
   useMotionValue,
+  useSpring,
   useTransform,
 } from "framer-motion";
 import { ArrowRight, Eye, EyeClosed, Lock, Mail } from "lucide-react";
@@ -16,9 +17,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        "focus-visible:border-[#a9c67b]/60 focus-visible:ring-[#a9c67b]/30 focus-visible:ring-[3px]",
         className,
       )}
       {...props}
@@ -26,15 +26,51 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   );
 }
 
+function GoogleIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M21.35 11.1h-9.18v2.98h5.27c-.23 1.24-.92 2.29-1.97 2.99v2.48h3.18c1.86-1.71 2.93-4.23 2.93-7.21 0-.69-.06-1.36-.23-2.24z"
+      />
+      <path
+        fill="currentColor"
+        d="M12.17 21.5c2.65 0 4.88-.88 6.5-2.38l-3.18-2.48c-.88.59-2 .94-3.32.94-2.55 0-4.71-1.72-5.48-4.04H3.41v2.55c1.61 3.2 4.92 5.41 8.76 5.41z"
+      />
+      <path
+        fill="currentColor"
+        d="M6.69 13.54a5.88 5.88 0 0 1 0-3.78V7.21H3.41a9.82 9.82 0 0 0 0 8.88l3.28-2.55z"
+      />
+      <path
+        fill="currentColor"
+        d="M12.17 5.72c1.44 0 2.74.5 3.76 1.47l2.82-2.82C17.04 2.77 14.82 1.8 12.17 1.8c-3.84 0-7.15 2.21-8.76 5.41l3.28 2.55c.77-2.32 2.93-4.04 5.48-4.04z"
+      />
+    </svg>
+  );
+}
+
+function GithubIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 2C6.48 2 2 6.59 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-1.05-.01-1.9-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.55-1.14-4.55-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.38 9.38 0 0 1 12 6.9c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.07.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.25C22 6.59 17.52 2 12 2z"
+      />
+    </svg>
+  );
+}
+
 export interface SignInCardProps {
   appName?: string | undefined;
   brandInitial?: string | undefined;
+  logoSrc?: string | undefined;
   initialMode?: "signin" | "signup" | undefined;
   forgotPasswordTo?: string | undefined;
   signUpTo?: string | undefined;
   signInTo?: string | undefined;
   backTo?: string | undefined;
-  backLabel?: string | undefined;
+  skipLabel?: string | undefined;
+  onSkip?: (() => void) | undefined;
   onAuthenticate?:
     | ((params: {
         mode: "signin" | "signup";
@@ -44,62 +80,120 @@ export interface SignInCardProps {
       }) => Promise<void>)
     | undefined;
   onGoogleSignIn?: (() => Promise<void> | void) | undefined;
+  onGithubSignIn?: (() => Promise<void> | void) | undefined;
   googleEnabled?: boolean | undefined;
 }
 
 export function Component({
   appName = "KALP",
   brandInitial = "K",
+  logoSrc = "/kalp-logo.png",
   initialMode = "signin",
   forgotPasswordTo,
-  signUpTo = "/auth?mode=signup",
-  signInTo = "/auth",
-  backTo = "/",
-  backLabel = "Back to home",
+  backTo = "/home",
+  skipLabel = "Skip for now",
+  onSkip,
   onAuthenticate,
   onGoogleSignIn,
+  onGithubSignIn,
   googleEnabled = false,
 }: SignInCardProps = {}) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [emailFormOpen, setEmailFormOpen] = useState(
+    initialMode === "signup",
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [focusedInput, setFocusedInput] = useState<"email" | "password" | null>(
     null,
   );
   const [rememberMe, setRememberMe] = useState(false);
 
-  // For 3D card effect - increased rotation range for more pronounced 3D effect
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const rotateX = useTransform(mouseY, [-300, 300], [10, -10]);
-  const rotateY = useTransform(mouseX, [-300, 300], [-10, 10]);
+  const mouseNormX = useMotionValue(0);
+  const mouseNormY = useMotionValue(0);
+  const rawRotateX = useTransform(mouseNormY, [-1, 1], [10, -10]);
+  const rawRotateY = useTransform(mouseNormX, [-1, 1], [-10, 10]);
+  const rotateX = useSpring(rawRotateX, {
+    stiffness: 170,
+    damping: 22,
+    mass: 0.6,
+  });
+  const rotateY = useSpring(rawRotateY, {
+    stiffness: 170,
+    damping: 22,
+    mass: 0.6,
+  });
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    const updateTiltFromPoint = (clientX: number, clientY: number) => {
+      const width = window.innerWidth || 1;
+      const height = window.innerHeight || 1;
+      const normX = Math.max(-1, Math.min(1, (clientX / width) * 2 - 1));
+      const normY = Math.max(-1, Math.min(1, (clientY / height) * 2 - 1));
+      mouseNormX.set(normX);
+      mouseNormY.set(normY);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      updateTiltFromPoint(event.clientX, event.clientY);
+    };
+
+    const handleMouseLeaveWindow = () => {
+      mouseNormX.set(0);
+      mouseNormY.set(0);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeaveWindow);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("mouseleave", handleMouseLeaveWindow);
+    };
+  }, [mouseNormX, mouseNormY]);
+
+  const handleContainerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    mouseX.set(e.clientX - rect.left - rect.width / 2);
-    mouseY.set(e.clientY - rect.top - rect.height / 2);
+    if (!rect.width || !rect.height) return;
+    const normX = Math.max(
+      -1,
+      Math.min(1, ((e.clientX - rect.left) / rect.width) * 2 - 1),
+    );
+    const normY = Math.max(
+      -1,
+      Math.min(1, ((e.clientY - rect.top) / rect.height) * 2 - 1),
+    );
+    mouseNormX.set(normX);
+    mouseNormY.set(normY);
   };
 
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
+  const handleContainerMouseLeave = () => {
+    mouseNormX.set(0);
+    mouseNormY.set(0);
+  };
+
+  const handleSkipClick = () => {
+    onSkip?.();
+    if (backTo) {
+      navigate(backTo);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMessage(null);
+    setStatusMessage(null);
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
-      setErrorMessage("Please enter both your email address and password.");
+      setStatusMessage("Please enter both your email address and password.");
       return;
     }
 
     if (!onAuthenticate) {
-      setErrorMessage(
+      setStatusMessage(
         "Authentication handler is not connected for this preview.",
       );
       return;
@@ -114,7 +208,7 @@ export function Component({
         rememberMe,
       });
     } catch (error) {
-      setErrorMessage(
+      setStatusMessage(
         error instanceof Error
           ? error.message
           : "Unable to sign in. Please check your credentials.",
@@ -124,12 +218,40 @@ export function Component({
     }
   };
 
+  const handleGoogleClick = () => {
+    setStatusMessage(null);
+    if (googleEnabled && onGoogleSignIn) {
+      void onGoogleSignIn();
+      return;
+    }
+    setEmailFormOpen(true);
+    setStatusMessage(
+      "Google OAuth is not configured in this workspace yet. Please continue with Email below.",
+    );
+  };
+
+  const handleGithubClick = () => {
+    setStatusMessage(null);
+    if (onGithubSignIn) {
+      void onGithubSignIn();
+      return;
+    }
+    setEmailFormOpen(true);
+    setStatusMessage(
+      "GitHub OAuth is not connected in this workspace yet. Please continue with Email below.",
+    );
+  };
+
   const isSignUp = mode === "signup";
 
   return (
-    <div className="min-h-screen w-full bg-black relative overflow-hidden flex items-center justify-center px-4 py-10">
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-500/40 via-purple-700/50 to-black" />
+    <div
+      onMouseMove={handleContainerMouseMove}
+      onMouseLeave={handleContainerMouseLeave}
+      className="min-h-screen w-full bg-[#1d4d32] relative overflow-hidden flex items-center justify-center px-4 py-10"
+    >
+      {/* Background gradient in a lighter fresh green matching the KALP logo */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#377e51]/90 via-[#255d3b]/88 to-[#173e28]" />
 
       {/* Subtle noise texture overlay */}
       <div
@@ -140,12 +262,12 @@ export function Component({
         }}
       />
 
-      {/* Top radial glow */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-purple-400/20 blur-[80px] pointer-events-none" />
+      {/* Forest & lime radial glows matching KALP logo palette */}
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-[#a9c67b]/30 blur-[85px] pointer-events-none" />
       <motion.div
-        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[100vh] h-[60vh] rounded-b-full bg-purple-300/20 blur-[60px] pointer-events-none"
+        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[100vh] h-[60vh] rounded-b-full bg-[#c9e3a8]/22 blur-[65px] pointer-events-none"
         animate={{
-          opacity: [0.15, 0.3, 0.15],
+          opacity: [0.22, 0.38, 0.22],
           scale: [0.98, 1.02, 0.98],
         }}
         transition={{
@@ -155,7 +277,7 @@ export function Component({
         }}
       />
       <motion.div
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[90vh] h-[90vh] rounded-t-full bg-purple-400/20 blur-[60px] pointer-events-none"
+        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[90vh] h-[90vh] rounded-t-full bg-[#4c9160]/35 blur-[70px] pointer-events-none"
         animate={{
           opacity: [0.3, 0.5, 0.3],
           scale: [1, 1.1, 1],
@@ -168,35 +290,29 @@ export function Component({
         }}
       />
 
-      {/* Animated glow spots */}
-      <div className="absolute left-1/4 top-1/4 w-96 h-96 bg-white/5 rounded-full blur-[100px] animate-pulse opacity-40 pointer-events-none" />
-      <div className="absolute right-1/4 bottom-1/4 w-96 h-96 bg-white/5 rounded-full blur-[100px] animate-pulse delay-1000 opacity-40 pointer-events-none" />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.7 }}
         className="w-full max-w-sm relative z-10"
         style={{ perspective: 1500 }}
       >
         <motion.div
           className="relative"
           style={{ rotateX, rotateY }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          whileHover={{ z: 10 }}
+          whileHover={{ z: 8 }}
         >
           <div className="relative group">
-            {/* Card glow effect */}
+            {/* Soft leaf-tinted perimeter glow */}
             <motion.div
-              className="absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-70 transition-opacity duration-700"
+              className="absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-75 transition-opacity duration-700 pointer-events-none"
               animate={{
                 boxShadow: [
-                  "0 0 10px 2px rgba(255,255,255,0.03)",
-                  "0 0 15px 5px rgba(255,255,255,0.05)",
-                  "0 0 10px 2px rgba(255,255,255,0.03)",
+                  "0 0 12px 2px rgba(169,198,123,0.06)",
+                  "0 0 20px 5px rgba(169,198,123,0.12)",
+                  "0 0 12px 2px rgba(169,198,123,0.06)",
                 ],
-                opacity: [0.2, 0.4, 0.2],
+                opacity: [0.25, 0.45, 0.25],
               }}
               transition={{
                 duration: 4,
@@ -206,587 +322,274 @@ export function Component({
               }}
             />
 
-            {/* Traveling light beam effect */}
+            {/* Traveling light beams tinted with KALP leaf green */}
             <div className="absolute -inset-[1px] rounded-2xl overflow-hidden pointer-events-none">
-              {/* Top light beam */}
               <motion.div
-                className="absolute top-0 left-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
-                initial={{ filter: "blur(2px)" }}
-                animate={{
-                  left: ["-50%", "100%"],
-                  opacity: [0.3, 0.7, 0.3],
-                  filter: ["blur(1px)", "blur(2.5px)", "blur(1px)"],
-                }}
+                className="absolute top-0 left-0 h-[2px] w-[50%] bg-gradient-to-r from-transparent via-[#c9e3a8] to-transparent opacity-75"
+                animate={{ left: ["-50%", "100%"] }}
                 transition={{
-                  left: {
-                    duration: 2.5,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                  },
-                  opacity: {
-                    duration: 1.2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                  },
-                  filter: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                  },
-                }}
-              />
-
-              {/* Right light beam */}
-              <motion.div
-                className="absolute top-0 right-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
-                initial={{ filter: "blur(2px)" }}
-                animate={{
-                  top: ["-50%", "100%"],
-                  opacity: [0.3, 0.7, 0.3],
-                  filter: ["blur(1px)", "blur(2.5px)", "blur(1px)"],
-                }}
-                transition={{
-                  top: {
-                    duration: 2.5,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                    delay: 0.6,
-                  },
-                  opacity: {
-                    duration: 1.2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 0.6,
-                  },
-                  filter: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 0.6,
-                  },
-                }}
-              />
-
-              {/* Bottom light beam */}
-              <motion.div
-                className="absolute bottom-0 right-0 h-[3px] w-[50%] bg-gradient-to-r from-transparent via-white to-transparent opacity-70"
-                initial={{ filter: "blur(2px)" }}
-                animate={{
-                  right: ["-50%", "100%"],
-                  opacity: [0.3, 0.7, 0.3],
-                  filter: ["blur(1px)", "blur(2.5px)", "blur(1px)"],
-                }}
-                transition={{
-                  right: {
-                    duration: 2.5,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                    delay: 1.2,
-                  },
-                  opacity: {
-                    duration: 1.2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1.2,
-                  },
-                  filter: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1.2,
-                  },
-                }}
-              />
-
-              {/* Left light beam */}
-              <motion.div
-                className="absolute bottom-0 left-0 h-[50%] w-[3px] bg-gradient-to-b from-transparent via-white to-transparent opacity-70"
-                initial={{ filter: "blur(2px)" }}
-                animate={{
-                  bottom: ["-50%", "100%"],
-                  opacity: [0.3, 0.7, 0.3],
-                  filter: ["blur(1px)", "blur(2.5px)", "blur(1px)"],
-                }}
-                transition={{
-                  bottom: {
-                    duration: 2.5,
-                    ease: "easeInOut",
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                    delay: 1.8,
-                  },
-                  opacity: {
-                    duration: 1.2,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1.8,
-                  },
-                  filter: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatType: "mirror",
-                    delay: 1.8,
-                  },
-                }}
-              />
-
-              {/* Subtle corner glow spots */}
-              <motion.div
-                className="absolute top-0 left-0 h-[5px] w-[5px] rounded-full bg-white/40 blur-[1px]"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
-                transition={{
-                  duration: 2,
+                  duration: 2.6,
+                  ease: "easeInOut",
                   repeat: Infinity,
-                  repeatType: "mirror",
+                  repeatDelay: 1,
                 }}
               />
               <motion.div
-                className="absolute top-0 right-0 h-[8px] w-[8px] rounded-full bg-white/60 blur-[2px]"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
+                className="absolute bottom-0 right-0 h-[2px] w-[50%] bg-gradient-to-r from-transparent via-[#a9c67b] to-transparent opacity-75"
+                animate={{ right: ["-50%", "100%"] }}
                 transition={{
-                  duration: 2.4,
+                  duration: 2.6,
+                  ease: "easeInOut",
                   repeat: Infinity,
-                  repeatType: "mirror",
-                  delay: 0.5,
-                }}
-              />
-              <motion.div
-                className="absolute bottom-0 right-0 h-[8px] w-[8px] rounded-full bg-white/60 blur-[2px]"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
-                transition={{
-                  duration: 2.2,
-                  repeat: Infinity,
-                  repeatType: "mirror",
-                  delay: 1,
-                }}
-              />
-              <motion.div
-                className="absolute bottom-0 left-0 h-[5px] w-[5px] rounded-full bg-white/40 blur-[1px]"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
-                transition={{
-                  duration: 2.3,
-                  repeat: Infinity,
-                  repeatType: "mirror",
-                  delay: 1.5,
+                  repeatDelay: 1,
+                  delay: 1.3,
                 }}
               />
             </div>
 
-            {/* Card border glow */}
-            <div className="absolute -inset-[0.5px] rounded-2xl bg-gradient-to-r from-white/5 via-white/10 to-white/5 opacity-0 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none" />
-
-            {/* Glass card background */}
-            <div className="relative bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/[0.05] shadow-2xl overflow-hidden">
-              {/* Subtle card inner patterns */}
+            {/* Dark emerald glass card */}
+            <div className="relative bg-[#0a130e]/92 backdrop-blur-xl rounded-2xl p-6 border border-[#a9c67b]/15 shadow-2xl overflow-hidden">
               <div
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, white 0.5px, transparent 0.5px), linear-gradient(45deg, white 0.5px, transparent 0.5px)`,
+                  backgroundImage: `linear-gradient(135deg, #a9c67b 0.5px, transparent 0.5px), linear-gradient(45deg, #a9c67b 0.5px, transparent 0.5px)`,
                   backgroundSize: "30px 30px",
                 }}
               />
 
               {/* Logo and header */}
-              <div className="text-center space-y-1 mb-5 relative">
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", duration: 0.8 }}
-                  className="mx-auto w-10 h-10 rounded-full border border-white/10 flex items-center justify-center relative overflow-hidden"
-                >
-                  <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
-                    {brandInitial}
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
-                </motion.div>
+              <div className="text-center space-y-1.5 mb-6 relative">
+                {logoSrc ? (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", duration: 0.7 }}
+                    className="mx-auto flex items-center justify-center mb-2"
+                  >
+                    <img
+                      src={logoSrc}
+                      alt={appName}
+                      className="h-14 w-auto object-contain drop-shadow-[0_4px_16px_rgba(169,198,123,0.28)]"
+                    />
+                  </motion.div>
+                ) : (
+                  <div className="mx-auto w-10 h-10 rounded-xl border border-[#a9c67b]/25 bg-[#173d2e]/50 flex items-center justify-center">
+                    <span className="text-lg font-bold text-[#f5f6ee]">
+                      {brandInitial}
+                    </span>
+                  </div>
+                )}
 
-                <motion.h1
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80"
-                >
+                <h1 className="text-xl font-bold text-[#f5f6ee] tracking-tight">
                   {isSignUp ? `Create ${appName} Account` : "Welcome Back"}
-                </motion.h1>
+                </h1>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-white/60 text-xs"
-                >
+                <p className="text-white/65 text-xs">
                   {isSignUp
-                    ? `Register to continue to ${appName}`
-                    : `Sign in to continue to ${appName}`}
-                </motion.p>
+                    ? `Create your ${appName} account to continue.`
+                    : "Enter your credentials to access your account."}
+                </p>
               </div>
 
-              {errorMessage && (
+              {statusMessage && (
                 <div
                   role="alert"
-                  className="mb-4 rounded-lg border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs text-red-100"
+                  className="mb-4 rounded-lg border border-[#a9c67b]/30 bg-[#173d2e]/70 px-3 py-2 text-xs text-[#eef5e4]"
                 >
-                  {errorMessage}
+                  {statusMessage}
                 </div>
               )}
 
-              {/* Login / Signup form */}
-              <form onSubmit={handleSubmit} className="space-y-4 relative">
-                <motion.div className="space-y-3">
-                  {/* Email input */}
-                  <motion.div
-                    className={`relative ${focusedInput === "email" ? "z-10" : ""}`}
-                    whileFocus={{ scale: 1.02 }}
-                    whileHover={{ scale: 1.01 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  >
-                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
+              <div className="space-y-3 relative">
+                {/* Continue with Google */}
+                <button
+                  type="button"
+                  onClick={handleGoogleClick}
+                  className="w-full h-10 rounded-lg bg-[#f3f5ef] hover:bg-white text-[#121c16] font-medium text-sm transition-colors flex items-center justify-center gap-2.5 shadow-sm"
+                >
+                  <GoogleIcon />
+                  <span>Continue with Google</span>
+                </button>
 
-                    <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Mail
-                        className={`absolute left-3 w-4 h-4 transition-all duration-300 pointer-events-none ${
-                          focusedInput === "email"
-                            ? "text-white"
-                            : "text-white/40"
-                        }`}
-                        aria-hidden="true"
-                      />
+                {/* OR divider matching second image */}
+                <div className="relative py-2 flex items-center">
+                  <div className="flex-grow border-t border-white/12" />
+                  <span className="mx-3 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white/55 bg-[#0f1b14] rounded">
+                    OR
+                  </span>
+                  <div className="flex-grow border-t border-white/12" />
+                </div>
 
-                      <Input
-                        type="email"
-                        required
-                        autoComplete="email"
-                        placeholder="Email address"
-                        aria-label="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onFocus={() => setFocusedInput("email")}
-                        onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-3 focus:bg-white/10"
-                      />
+                {/* Continue with Email toggle button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailFormOpen((prev) => !prev);
+                    setStatusMessage(null);
+                  }}
+                  aria-expanded={emailFormOpen}
+                  className="w-full h-10 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 hover:border-[#a9c67b]/35 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+                >
+                  <Mail className="w-4 h-4 text-[#a9c67b]" aria-hidden="true" />
+                  <span>Continue with Email</span>
+                </button>
 
-                      {focusedInput === "email" && (
-                        <motion.div
-                          layoutId="input-highlight"
-                          className="absolute inset-0 bg-white/5 -z-10"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
+                {/* Expandable Email & Password form */}
+                <AnimatePresence initial={false}>
+                  {emailFormOpen && (
+                    <motion.form
+                      key="email-form"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.22 }}
+                      onSubmit={handleSubmit}
+                      className="overflow-hidden space-y-3 pt-1"
+                    >
+                      <div className="relative flex items-center overflow-hidden rounded-lg">
+                        <Mail
+                          className={`absolute left-3 w-4 h-4 transition-colors pointer-events-none ${
+                            focusedInput === "email"
+                              ? "text-[#a9c67b]"
+                              : "text-white/40"
+                          }`}
+                          aria-hidden="true"
                         />
-                      )}
-                    </div>
-                  </motion.div>
+                        <Input
+                          type="email"
+                          required
+                          autoComplete="email"
+                          placeholder="Email address"
+                          aria-label="Email address"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          onFocus={() => setFocusedInput("email")}
+                          onBlur={() => setFocusedInput(null)}
+                          className="w-full bg-white/5 border-white/10 focus:border-[#a9c67b]/50 text-white placeholder:text-white/35 h-10 pl-10 pr-3"
+                        />
+                      </div>
 
-                  {/* Password input */}
-                  <motion.div
-                    className={`relative ${focusedInput === "password" ? "z-10" : ""}`}
-                    whileFocus={{ scale: 1.02 }}
-                    whileHover={{ scale: 1.01 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  >
-                    <div className="absolute -inset-[0.5px] bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
+                      <div className="relative flex items-center overflow-hidden rounded-lg">
+                        <Lock
+                          className={`absolute left-3 w-4 h-4 transition-colors pointer-events-none ${
+                            focusedInput === "password"
+                              ? "text-[#a9c67b]"
+                              : "text-white/40"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          required
+                          autoComplete={
+                            isSignUp ? "new-password" : "current-password"
+                          }
+                          placeholder="Password"
+                          aria-label="Password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onFocus={() => setFocusedInput("password")}
+                          onBlur={() => setFocusedInput(null)}
+                          className="w-full bg-white/5 border-white/10 focus:border-[#a9c67b]/50 text-white placeholder:text-white/35 h-10 pl-10 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          className="absolute right-3 text-white/45 hover:text-white transition-colors"
+                        >
+                          {showPassword ? (
+                            <Eye className="w-4 h-4" aria-hidden="true" />
+                          ) : (
+                            <EyeClosed className="w-4 h-4" aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
 
-                    <div className="relative flex items-center overflow-hidden rounded-lg">
-                      <Lock
-                        className={`absolute left-3 w-4 h-4 transition-all duration-300 pointer-events-none ${
-                          focusedInput === "password"
-                            ? "text-white"
-                            : "text-white/40"
-                        }`}
-                        aria-hidden="true"
-                      />
-
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        autoComplete={
-                          isSignUp ? "new-password" : "current-password"
-                        }
-                        placeholder="Password"
-                        aria-label="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onFocus={() => setFocusedInput("password")}
-                        onBlur={() => setFocusedInput(null)}
-                        className="w-full bg-white/5 border-transparent focus:border-white/20 text-white placeholder:text-white/30 h-10 transition-all duration-300 pl-10 pr-10 focus:bg-white/10"
-                      />
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="inline-flex items-center gap-2 text-white/65 hover:text-white/85 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={() => setRememberMe((prev) => !prev)}
+                            className="h-3.5 w-3.5 rounded border-white/25 bg-white/5 accent-[#81a85f]"
+                          />
+                          <span>Remember me</span>
+                        </label>
+                        {forgotPasswordTo && (
+                          <Link
+                            to={forgotPasswordTo}
+                            className="text-white/65 hover:text-white transition-colors"
+                          >
+                            Forgot password?
+                          </Link>
+                        )}
+                      </div>
 
                       <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        className="absolute right-3 text-white/40 hover:text-white transition-colors duration-300"
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-10 rounded-lg bg-[#81a85f] hover:bg-[#93b971] text-[#0c1a12] font-semibold text-sm transition-colors flex items-center justify-center gap-1.5"
                       >
-                        {showPassword ? (
-                          <Eye className="w-4 h-4" aria-hidden="true" />
+                        {isLoading ? (
+                          <span className="w-4 h-4 border-2 border-[#0c1a12]/70 border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <EyeClosed className="w-4 h-4" aria-hidden="true" />
+                          <>
+                            <span>
+                              {isSignUp ? "Create Account" : "Sign In"}
+                            </span>
+                            <ArrowRight
+                              className="w-3.5 h-3.5"
+                              aria-hidden="true"
+                            />
+                          </>
                         )}
                       </button>
 
-                      {focusedInput === "password" && (
-                        <motion.div
-                          layoutId="input-highlight"
-                          className="absolute inset-0 bg-white/5 -z-10"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        />
-                      )}
-                    </div>
-                  </motion.div>
-                </motion.div>
-
-                {/* Remember me & Forgot password */}
-                <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="relative">
-                      <input
-                        id="remember-me"
-                        name="remember-me"
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={() => setRememberMe((prev) => !prev)}
-                        className="appearance-none h-4 w-4 rounded border border-white/20 bg-white/5 checked:bg-white checked:border-white focus:outline-none focus:ring-1 focus:ring-white/30 transition-all duration-200"
-                      />
-                      {rememberMe && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="absolute inset-0 flex items-center justify-center text-black pointer-events-none"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </motion.div>
-                      )}
-                    </div>
-                    <label
-                      htmlFor="remember-me"
-                      className="text-xs text-white/60 hover:text-white/80 transition-colors duration-200"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-
-                  {forgotPasswordTo && (
-                    <div className="text-xs relative group/link">
-                      <Link
-                        to={forgotPasswordTo}
-                        className="text-white/60 hover:text-white transition-colors duration-200"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit button */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full relative group/button mt-5"
-                >
-                  <div className="absolute inset-0 bg-white/10 rounded-lg blur-lg opacity-0 group-hover/button:opacity-70 transition-opacity duration-300" />
-
-                  <div className="relative overflow-hidden bg-white text-black font-medium h-10 rounded-lg transition-all duration-300 flex items-center justify-center">
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -z-10"
-                      animate={{
-                        x: ["-100%", "100%"],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        ease: "easeInOut",
-                        repeat: Infinity,
-                        repeatDelay: 1,
-                      }}
-                      style={{
-                        opacity: isLoading ? 1 : 0,
-                        transition: "opacity 0.3s ease",
-                      }}
-                    />
-
-                    <AnimatePresence mode="wait">
-                      {isLoading ? (
-                        <motion.div
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center justify-center"
-                        >
-                          <div className="w-4 h-4 border-2 border-black/70 border-t-transparent rounded-full animate-spin" />
-                        </motion.div>
-                      ) : (
-                        <motion.span
-                          key="button-text"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center justify-center gap-1 text-sm font-medium"
-                        >
-                          {isSignUp ? "Create Account" : "Sign In"}
-                          <ArrowRight
-                            className="w-3 h-3 group-hover/button:translate-x-1 transition-transform duration-300"
-                            aria-hidden="true"
-                          />
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.button>
-
-                {googleEnabled && onGoogleSignIn && (
-                  <>
-                    <div className="relative mt-2 mb-5 flex items-center">
-                      <div className="flex-grow border-t border-white/5" />
-                      <motion.span
-                        className="mx-3 text-xs text-white/40"
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: [0.7, 0.9, 0.7] }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        or
-                      </motion.span>
-                      <div className="flex-grow border-t border-white/5" />
-                    </div>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="button"
-                      onClick={() => void onGoogleSignIn()}
-                      className="w-full relative group/google"
-                    >
-                      <div className="absolute inset-0 bg-white/5 rounded-lg blur opacity-0 group-hover/google:opacity-70 transition-opacity duration-300" />
-
-                      <div className="relative overflow-hidden bg-white/5 text-white font-medium h-10 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 flex items-center justify-center text-white/80 group-hover/google:text-white transition-colors duration-300">
-                          G
-                        </div>
-
-                        <span className="text-white/80 group-hover/google:text-white transition-colors text-xs">
-                          Sign in with Google
-                        </span>
-
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0"
-                          initial={{ x: "-100%" }}
-                          whileHover={{ x: "100%" }}
-                          transition={{
-                            duration: 1,
-                            ease: "easeInOut",
-                          }}
-                        />
-                      </div>
-                    </motion.button>
-                  </>
-                )}
-
-                {/* Mode switch / Sign up link */}
-                <motion.p
-                  className="text-center text-xs text-white/60 mt-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  {isSignUp ? (
-                    <>
-                      Already have an account?{" "}
-                      {onAuthenticate ? (
+                      <p className="text-center text-xs text-white/60">
+                        {isSignUp ? "Already have an account? " : "Need an account? "}
                         <button
                           type="button"
                           onClick={() => {
-                            setMode("signin");
-                            setErrorMessage(null);
+                            setMode((prev) =>
+                              prev === "signin" ? "signup" : "signin",
+                            );
+                            setStatusMessage(null);
                           }}
-                          className="relative inline-block group/signup"
+                          className="text-[#c9e3a8] hover:text-white font-medium underline underline-offset-2"
                         >
-                          <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
-                            Sign in
-                          </span>
-                          <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
+                          {isSignUp ? "Sign in" : "Sign up"}
                         </button>
-                      ) : (
-                        <Link
-                          to={signInTo}
-                          className="relative inline-block group/signup"
-                        >
-                          <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
-                            Sign in
-                          </span>
-                          <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
-                        </Link>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      Don&apos;t have an account?{" "}
-                      {onAuthenticate ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMode("signup");
-                            setErrorMessage(null);
-                          }}
-                          className="relative inline-block group/signup"
-                        >
-                          <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
-                            Sign up
-                          </span>
-                          <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
-                        </button>
-                      ) : (
-                        <Link
-                          to={signUpTo}
-                          className="relative inline-block group/signup"
-                        >
-                          <span className="relative z-10 text-white group-hover/signup:text-white/70 transition-colors duration-300 font-medium">
-                            Sign up
-                          </span>
-                          <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover/signup:w-full transition-all duration-300" />
-                        </Link>
-                      )}
-                    </>
+                      </p>
+                    </motion.form>
                   )}
-                </motion.p>
+                </AnimatePresence>
 
+                {/* Continue with Github */}
+                <button
+                  type="button"
+                  onClick={handleGithubClick}
+                  className="w-full h-10 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 hover:border-[#a9c67b]/35 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+                >
+                  <GithubIcon />
+                  <span>Continue with Github</span>
+                </button>
+
+                {/* Skip for now */}
                 {backTo && (
-                  <p className="text-center text-xs text-white/45 pt-1">
-                    <Link
-                      to={backTo}
-                      className="hover:text-white/80 transition-colors duration-200"
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleSkipClick}
+                      className="w-full h-10 cursor-pointer rounded-lg bg-transparent hover:bg-white/[0.06] border border-white/15 hover:border-[#a9c67b]/45 text-white font-medium text-sm transition-colors flex items-center justify-center"
                     >
-                      ← {backLabel}
-                    </Link>
-                  </p>
+                      {skipLabel}
+                    </button>
+                  </div>
                 )}
-              </form>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -796,4 +599,3 @@ export function Component({
 }
 
 export { Component as SignInCard2 };
-

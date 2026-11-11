@@ -6,6 +6,16 @@ export const CAMPAIGN_CATEGORIES = [
   "College Startups",
 ] as const;
 
+export const CREATE_CAMPAIGN_CATEGORIES = [
+  "Student Projects",
+  "College Events",
+  "Hackathon Projects",
+  "College Startups",
+] as const;
+
+export type CreateCampaignCategory =
+  (typeof CREATE_CAMPAIGN_CATEGORIES)[number];
+
 export const CAMPAIGN_STATUS_FILTERS = [
   { value: "all", label: "All statuses" },
   { value: "active", label: "Active" },
@@ -37,6 +47,54 @@ export interface PlatformStatsData {
   totalVerifiedDonors: number;
   totalFundsCollected: number;
   currency: string | null;
+}
+
+export interface RestrictedDocumentItem {
+  title: string;
+  url: string;
+  note?: string | undefined;
+}
+
+export interface ProtectedProofItem {
+  title: string;
+  summary: string;
+  url?: string | undefined;
+}
+
+export interface CampaignComment {
+  id: string;
+  authorEmail: string;
+  authorName: string | null;
+  body: string;
+  createdAt: string;
+}
+
+export interface CampaignChatMessage {
+  id: string;
+  senderEmail: string;
+  senderName: string | null;
+  message: string;
+  createdAt: string;
+}
+
+export interface CampaignMemberData {
+  campaignId: string;
+  isOwner: boolean;
+  isSaved: boolean;
+  ownerContact: {
+    name: string | null;
+    email: string | null;
+    contact: string | null;
+  } | null;
+  restrictedDocuments: RestrictedDocumentItem[];
+  protectedProofs: ProtectedProofItem[];
+  comments: CampaignComment[];
+  chatMessages: CampaignChatMessage[];
+}
+
+export interface MyCampaignsData {
+  created: Campaign[];
+  saved: Campaign[];
 }
 
 export function formatCampaignAmount(

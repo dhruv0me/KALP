@@ -34,17 +34,16 @@ export function serializeRestrictedDocuments(
   items: RestrictedDocumentItem[] | undefined,
 ): string | null {
   if (!items || items.length === 0) return null;
-  const normalized = items
-    .map((item) => {
-      const safeUrl = sanitizeHttpUrl(item.url);
-      if (!safeUrl) return null;
-      return {
-        title: item.title.trim(),
-        url: safeUrl,
-        ...(item.note?.trim() ? { note: item.note.trim() } : {}),
-      };
-    })
-    .filter((item): item is RestrictedDocumentItem => item !== null);
+  const normalized = items.flatMap((item) => {
+    const safeUrl = sanitizeHttpUrl(item.url);
+    if (!safeUrl) return [];
+    const trimmedNote = item.note?.trim();
+    return [
+      trimmedNote
+        ? { title: item.title.trim(), url: safeUrl, note: trimmedNote }
+        : { title: item.title.trim(), url: safeUrl },
+    ];
+  });
   return normalized.length > 0 ? JSON.stringify(normalized) : null;
 }
 

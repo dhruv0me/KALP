@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components/layout/Logo";
 import { useLanguage } from "@/hooks/use-language";
 import { useSession } from "@/hooks/use-session";
 
