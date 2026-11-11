@@ -1,70 +1,21 @@
 import {
   IconArrowLeft,
   IconArrowUpRight,
-  IconBookmark,
   IconCalendar,
-  IconCoin,
-  IconFileCheck,
-  IconLock,
-  IconMail,
   IconMapPin,
-  IconMessageCircle,
-  IconMessages,
-  IconShieldCheck,
   IconUsers,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  CampaignMemberWorkspace,
+  type ProtectedIntentKey,
+} from "@/components/campaigns/CampaignMemberWorkspace";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useSession } from "@/hooks/use-session";
 import { formatCampaignAmount, getFundingProgress } from "@/lib/campaigns";
-
-const PROTECTED_ACTIONS = [
-  {
-    key: "donate",
-    label: "Make a Donation",
-    icon: IconCoin,
-    note: "Payment gateway and on-chain contribution settlement are not yet enabled.",
-  },
-  {
-    key: "documents",
-    label: "View Restricted Documents",
-    icon: IconFileCheck,
-    note: "Restricted campaign documents are not yet attached to this campaign.",
-  },
-  {
-    key: "proofs",
-    label: "View Protected Proofs",
-    icon: IconShieldCheck,
-    note: "Protected milestone proofs have not been uploaded for this campaign yet.",
-  },
-  {
-    key: "contact",
-    label: "Access Owner Contact Details",
-    icon: IconMail,
-    note: "Campaign owner contact details are not yet published in this preview.",
-  },
-  {
-    key: "chat",
-    label: "Join Group Chat",
-    icon: IconMessages,
-    note: "Supporter group chat is not yet active for this campaign.",
-  },
-  {
-    key: "comments",
-    label: "Post a Comment",
-    icon: IconMessageCircle,
-    note: "Campaign comments are not yet enabled.",
-  },
-  {
-    key: "follow",
-    label: "Save / Follow Campaign",
-    icon: IconBookmark,
-    note: "Campaign bookmarking is not yet connected to user accounts.",
-  },
-] as const;
 
 export function meta() {
   return [{ title: "Campaign Details — KALP" }];
@@ -76,26 +27,16 @@ export default function CampaignDetailsRoute() {
   const { campaign, isLoading, isError, refetch } = useCampaign(id);
   const { authenticated } = useSession();
   const [imageFailed, setImageFailed] = useState(false);
-  const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
 
   const progress = campaign
     ? getFundingProgress(campaign.collectedAmount, campaign.targetAmount)
     : null;
 
-  const handleProtectedAction = (intentKey: string) => {
+  const handleGuestRequireAuth = (intentKey: ProtectedIntentKey) => {
     if (!id) return;
-    if (!authenticated) {
-      navigate(
-        `/member/campaigns/${encodeURIComponent(id)}?intent=${encodeURIComponent(intentKey)}`,
-      );
-      return;
-    }
-    setSelectedIntent(intentKey);
+    const targetPath = `/member/campaigns/${encodeURIComponent(id)}?intent=${encodeURIComponent(intentKey)}`;
+    navigate(`/auth?return=${encodeURIComponent(targetPath)}`);
   };
-
-  const activeProtectedAction = PROTECTED_ACTIONS.find(
-    (item) => item.key === selectedIntent,
-  );
 
   return (
     <main className="explore-page">
@@ -211,50 +152,11 @@ export default function CampaignDetailsRoute() {
             </div>
           )}
 
-          <section
-            className="protected-actions-panel"
-            aria-label="Member campaign actions"
-          >
-            <div className="protected-panel-head">
-              <h2>
-                <IconLock size={18} aria-hidden="true" /> Member &amp;
-                Transparency Actions
-              </h2>
-              <p>
-                {authenticated
-                  ? "You are signed in. Select an action below to check its availability."
-                  : "Sign in is required for donations, restricted documents, protected proofs, owner contact details, chat, comments, and saving campaigns."}
-              </p>
-            </div>
-
-            <div className="protected-actions-grid">
-              {PROTECTED_ACTIONS.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <button
-                    key={action.key}
-                    type="button"
-                    className={
-                      selectedIntent === action.key
-                        ? "protected-action-btn active"
-                        : "protected-action-btn"
-                    }
-                    onClick={() => handleProtectedAction(action.key)}
-                  >
-                    <Icon size={17} aria-hidden="true" />
-                    <span>{action.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {activeProtectedAction && (
-              <div className="protected-action-notice" role="status">
-                <strong>{activeProtectedAction.label}</strong>
-                <p>{activeProtectedAction.note}</p>
-              </div>
-            )}
-          </section>
+          <CampaignMemberWorkspace
+            campaign={campaign}
+            authenticated={authenticated}
+            onGuestRequireAuth={handleGuestRequireAuth}
+          />
         </div>
       )}
     </main>

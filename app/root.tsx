@@ -88,6 +88,8 @@ function DbSyncSetup() {
 function isRoutePublic(pathname: string): boolean {
   return (
     pathname === "/" ||
+    pathname === "/home" ||
+    pathname === "/home/" ||
     pathname === "/explore" ||
     pathname === "/explore/" ||
     pathname === "/auth" ||

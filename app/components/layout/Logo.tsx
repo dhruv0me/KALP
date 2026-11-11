@@ -8,7 +8,7 @@ interface LogoProps {
 export function Logo({ onClick }: LogoProps) {
   return (
     <Link
-      to="/"
+      to="/home"
       onClick={onClick}
       className="brand"
       aria-label="KALP — Transparent Campus Crowdfunding home"

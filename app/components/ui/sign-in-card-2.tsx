@@ -70,7 +70,7 @@ export interface SignInCardProps {
   signInTo?: string | undefined;
   backTo?: string | undefined;
   skipLabel?: string | undefined;
-  onSkip?: (() => void) | undefined;
+  onSkip?: (() => Promise<void> | void) | undefined;
   onAuthenticate?:
     | ((params: {
         mode: "signin" | "signup";
@@ -175,10 +175,13 @@ export function Component({
     mouseNormY.set(0);
   };
 
-  const handleSkipClick = () => {
-    onSkip?.();
-    if (backTo) {
-      navigate(backTo);
+  const handleSkipClick = async () => {
+    try {
+      await onSkip?.();
+    } finally {
+      if (backTo) {
+        navigate(backTo);
+      }
     }
   };
 
@@ -263,9 +266,10 @@ export function Component({
       />
 
       {/* Forest & lime radial glows matching KALP logo palette */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-[#a9c67b]/30 blur-[85px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vh] h-[60vh] rounded-b-[50%] bg-[#a9c67b]/35 blur-[85px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full bg-[#8dc97a]/25 blur-[95px] pointer-events-none" />
       <motion.div
-        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[100vh] h-[60vh] rounded-b-full bg-[#c9e3a8]/22 blur-[65px] pointer-events-none"
+        className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[100vh] h-[60vh] rounded-b-full bg-[#c9e3a8]/28 blur-[65px] pointer-events-none"
         animate={{
           opacity: [0.22, 0.38, 0.22],
           scale: [0.98, 1.02, 0.98],
@@ -277,7 +281,7 @@ export function Component({
         }}
       />
       <motion.div
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[90vh] h-[90vh] rounded-t-full bg-[#4c9160]/35 blur-[70px] pointer-events-none"
+        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[90vh] h-[90vh] rounded-t-full bg-[#5ab072]/38 blur-[70px] pointer-events-none"
         animate={{
           opacity: [0.3, 0.5, 0.3],
           scale: [1, 1.1, 1],
@@ -347,12 +351,13 @@ export function Component({
               />
             </div>
 
-            {/* Dark emerald glass card */}
-            <div className="relative bg-[#0a130e]/92 backdrop-blur-xl rounded-2xl p-6 border border-[#a9c67b]/15 shadow-2xl overflow-hidden">
+            {/* Translucent frosted emerald glass card */}
+            <div className="relative bg-[#0c2015]/46 backdrop-blur-2xl rounded-2xl p-6 border border-white/25 shadow-[0_24px_64px_rgba(4,18,10,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.14] via-white/[0.03] to-transparent pointer-events-none" />
               <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, #a9c67b 0.5px, transparent 0.5px), linear-gradient(45deg, #a9c67b 0.5px, transparent 0.5px)`,
+                  backgroundImage: `linear-gradient(135deg, #c9e3a8 0.5px, transparent 0.5px), linear-gradient(45deg, #c9e3a8 0.5px, transparent 0.5px)`,
                   backgroundSize: "30px 30px",
                 }}
               />
@@ -413,11 +418,11 @@ export function Component({
 
                 {/* OR divider matching second image */}
                 <div className="relative py-2 flex items-center">
-                  <div className="flex-grow border-t border-white/12" />
-                  <span className="mx-3 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white/55 bg-[#0f1b14] rounded">
+                  <div className="flex-grow border-t border-white/20" />
+                  <span className="mx-3 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white/75 bg-white/[0.10] border border-white/15 backdrop-blur-sm rounded-full">
                     OR
                   </span>
-                  <div className="flex-grow border-t border-white/12" />
+                  <div className="flex-grow border-t border-white/20" />
                 </div>
 
                 {/* Continue with Email toggle button */}
@@ -428,9 +433,9 @@ export function Component({
                     setStatusMessage(null);
                   }}
                   aria-expanded={emailFormOpen}
-                  className="w-full h-10 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 hover:border-[#a9c67b]/35 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+                  className="w-full h-10 rounded-lg bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-md border border-white/20 hover:border-[#c9e3a8]/45 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5 shadow-xs"
                 >
-                  <Mail className="w-4 h-4 text-[#a9c67b]" aria-hidden="true" />
+                  <Mail className="w-4 h-4 text-[#c9e3a8]" aria-hidden="true" />
                   <span>Continue with Email</span>
                 </button>
 
@@ -571,7 +576,7 @@ export function Component({
                 <button
                   type="button"
                   onClick={handleGithubClick}
-                  className="w-full h-10 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 hover:border-[#a9c67b]/35 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+                  className="w-full h-10 rounded-lg bg-white/[0.10] hover:bg-white/[0.18] backdrop-blur-md border border-white/20 hover:border-[#c9e3a8]/45 text-white font-medium text-sm transition-all flex items-center justify-center gap-2.5 shadow-xs"
                 >
                   <GithubIcon />
                   <span>Continue with Github</span>
@@ -582,8 +587,8 @@ export function Component({
                   <div className="pt-2">
                     <button
                       type="button"
-                      onClick={handleSkipClick}
-                      className="w-full h-10 cursor-pointer rounded-lg bg-transparent hover:bg-white/[0.06] border border-white/15 hover:border-[#a9c67b]/45 text-white font-medium text-sm transition-colors flex items-center justify-center"
+                      onClick={() => void handleSkipClick()}
+                      className="w-full h-10 cursor-pointer rounded-lg bg-white/[0.05] hover:bg-white/[0.12] backdrop-blur-md border border-white/22 hover:border-[#c9e3a8]/55 text-white font-medium text-sm transition-all flex items-center justify-center"
                     >
                       {skipLabel}
                     </button>

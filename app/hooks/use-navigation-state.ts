@@ -59,7 +59,7 @@ function matchesPathPrefix(pathname: string, prefix: string): boolean {
 }
 
 function viewForPath(pathname: string): string {
-  if (pathname === "/") return "home";
+  if (pathname === "/" || pathname === "/home") return "home";
   if (pathname === "/explore") return "explore";
   if (pathname === "/start-campaign") return "start-campaign";
   if (pathname.startsWith("/campaigns/")) return "campaign-detail";
@@ -75,6 +75,6 @@ function pathForView(view?: string): string {
       return "/start-campaign";
     case "home":
     default:
-      return "/";
+      return "/home";
   }
 }

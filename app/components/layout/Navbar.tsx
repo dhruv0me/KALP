@@ -8,11 +8,14 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Logo } from "@/components/layout/Logo";
+import { UserAvatar } from "@/components/layout/UserAvatar";
 import { useLanguage } from "@/hooks/use-language";
 import { useSession } from "@/hooks/use-session";
+import { clearSessionCookie } from "@/lib/auth-client";
 
 export function scrollToSectionId(id: string) {
   const target = document.getElementById(id);
@@ -24,27 +27,33 @@ export function scrollToSectionId(id: string) {
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const langPickerRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { pathname, hash } = useLocation();
   const { authenticated, email } = useSession();
   const { code, language, languages, copy, setLanguage } = useLanguage();
   const signInHref = "/auth";
 
   useEffect(() => {
-    if (!langOpen) return;
+    if (!langOpen && !userMenuOpen) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (
-        langPickerRef.current &&
-        !langPickerRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      if (langPickerRef.current && !langPickerRef.current.contains(target)) {
         setLangOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setLangOpen(false);
+        setUserMenuOpen(false);
       }
     };
 
@@ -54,12 +63,23 @@ export function Navbar() {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [langOpen]);
+  }, [langOpen, userMenuOpen]);
 
   const handleLogout = async () => {
     setOpen(false);
-    const { signOut } = await import("@agent-native/core/client");
-    await signOut();
+    setUserMenuOpen(false);
+    await clearSessionCookie();
+    queryClient.setQueryData(["action", "get-session", {}], {
+      authenticated: false,
+      email: null,
+    });
+    await queryClient.invalidateQueries();
+    if (
+      pathname.startsWith("/start-campaign") ||
+      pathname.startsWith("/member/")
+    ) {
+      navigate("/home");
+    }
   };
 
   const handleSectionClick = (
@@ -67,12 +87,14 @@ export function Navbar() {
     sectionId: string,
   ) => {
     setOpen(false);
-    if (pathname === "/") {
+    if (pathname === "/home" || pathname === "/home/") {
       event.preventDefault();
-      window.history.replaceState(null, "", `/#${sectionId}`);
+      window.history.replaceState(null, "", `/home#${sectionId}`);
       scrollToSectionId(sectionId);
     }
   };
+
+  const isHomeRoute = pathname === "/home" || pathname === "/home/";
 
   return (
     <header className="site-header">
@@ -85,13 +107,13 @@ export function Navbar() {
         >
           <Link
             onClick={() => setOpen(false)}
-            to="/"
-            aria-current={pathname === "/" && !hash ? "page" : undefined}
+            to="/home"
+            aria-current={isHomeRoute && !hash ? "page" : undefined}
           >
             {copy.nav.home}
           </Link>
           <Link
-            to="/#about"
+            to="/home#about"
             onClick={(event) => handleSectionClick(event, "about")}
           >
             {copy.nav.about}
@@ -104,13 +126,13 @@ export function Navbar() {
             {copy.nav.explore}
           </Link>
           <Link
-            to="/#how-it-works"
+            to="/home#how-it-works"
             onClick={(event) => handleSectionClick(event, "how-it-works")}
           >
             {copy.nav.howItWorks}
           </Link>
           <Link
-            to="/#contact"
+            to="/home#contact"
             onClick={(event) => handleSectionClick(event, "contact")}
           >
             {copy.nav.contact}
@@ -120,8 +142,8 @@ export function Navbar() {
             {authenticated ? (
               <div className="mobile-auth-row">
                 <span className="profile-badge">
-                  <IconUserCircle size={17} aria-hidden="true" />
-                  <span>{email ?? "Account"}</span>
+                  <UserAvatar email={email} size={28} />
+                  <span>{email ?? "Member"}</span>
                 </span>
                 <button
                   type="button"
@@ -228,20 +250,48 @@ export function Navbar() {
           </div>
 
           {authenticated ? (
-            <div className="auth-controls">
-              <span className="profile-badge" title={email ?? "Signed in"}>
-                <IconUserCircle size={18} aria-hidden="true" />
-                <span className="profile-email">{email ?? "Member"}</span>
-              </span>
+            <div className="user-menu-wrap" ref={userMenuRef}>
               <button
                 type="button"
-                className="logout-button"
-                onClick={() => void handleLogout()}
-                aria-label={copy.nav.logout}
+                className="user-avatar-button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                aria-label={email ? `Account menu (${email})` : "Account menu"}
+                title={email ?? "Member account"}
               >
-                <IconLogout size={15} aria-hidden="true" />
-                <span>{copy.nav.logout}</span>
+                <UserAvatar email={email} size={38} />
               </button>
+
+              {userMenuOpen && (
+                <div className="user-menu-dropdown" role="menu">
+                  <div className="user-menu-header">
+                    <UserAvatar email={email} size={32} />
+                    <div className="user-menu-meta">
+                      <strong>Signed in</strong>
+                      <span>{email ?? "KALP Member"}</span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/start-campaign"
+                    role="menuitem"
+                    className="user-menu-item"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <span>Creator Studio &amp; Saved</span>
+                    <IconArrowUpRight size={14} aria-hidden="true" />
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="user-menu-item user-menu-logout"
+                    onClick={() => void handleLogout()}
+                  >
+                    <span>{copy.nav.logout}</span>
+                    <IconLogout size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <Link

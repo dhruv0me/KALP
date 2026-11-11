@@ -35,7 +35,7 @@ export async function authenticateWithPassword({
   mode,
   email,
   password,
-  returnTo = "/",
+  returnTo = "/home",
 }: {
   mode: "signin" | "signup";
   email: string;
@@ -48,12 +48,14 @@ export async function authenticateWithPassword({
   await postAuthJson("/_agent-native/auth/login", { email, password });
 
   const safeTarget =
-    returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
+    returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/home";
   window.location.assign(appPath(safeTarget));
 }
 
 export async function fetchGoogleAuthUrl(
-  returnTo = "/",
+  returnTo = "/home",
 ): Promise<string | null> {
   try {
     const response = await fetch(
@@ -67,6 +69,17 @@ export async function fetchGoogleAuthUrl(
     return data.url ?? null;
   } catch {
     return null;
+  }
+}
+
+export async function clearSessionCookie(): Promise<void> {
+  try {
+    await fetch(appPath("/_agent-native/auth/logout"), {
+      method: "POST",
+      credentials: "same-origin",
+    });
+  } catch {
+    // Best-effort cookie clear before continuing as guest.
   }
 }
 

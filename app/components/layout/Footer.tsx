@@ -11,9 +11,9 @@ export function Footer() {
     event: React.MouseEvent<HTMLAnchorElement>,
     sectionId: string,
   ) => {
-    if (pathname === "/") {
+    if (pathname === "/home" || pathname === "/home/") {
       event.preventDefault();
-      window.history.replaceState(null, "", `/#${sectionId}`);
+      window.history.replaceState(null, "", `/home#${sectionId}`);
       scrollToSectionId(sectionId);
     }
   };
@@ -27,14 +27,14 @@ export function Footer() {
         </div>
         <div className="footer-links">
           <Link
-            to="/#about"
+            to="/home#about"
             onClick={(event) => handleSectionClick(event, "about")}
           >
             {copy.nav.about}
           </Link>
           <Link to="/explore">{copy.nav.explore}</Link>
           <Link
-            to="/#how-it-works"
+            to="/home#how-it-works"
             onClick={(event) => handleSectionClick(event, "how-it-works")}
           >
             {copy.nav.howItWorks}

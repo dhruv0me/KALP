@@ -14,7 +14,8 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { pathname, hash } = useLocation();
   const mainRef = useRef<HTMLDivElement>(null);
-  const isStandaloneAuthRoute = pathname === "/auth" || pathname === "/auth/";
+  const isStandaloneAuthRoute =
+    pathname === "/" || pathname === "/auth" || pathname === "/auth/";
 
   useEffect(() => {
     if (hash) {

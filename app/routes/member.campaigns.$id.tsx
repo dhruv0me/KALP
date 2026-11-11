@@ -1,48 +1,21 @@
 import { IconArrowLeft, IconShieldCheck } from "@tabler/icons-react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { useEffect } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router";
+import {
+  CampaignMemberWorkspace,
+  isProtectedIntentKey,
+  type ProtectedIntentKey,
+} from "@/components/campaigns/CampaignMemberWorkspace";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaign } from "@/hooks/use-campaigns";
 import { useSession } from "@/hooks/use-session";
-
-const DEFAULT_INTENT_DETAIL = {
-  title: "Make a Donation",
-  message:
-    "You are signed in and returned to this campaign. Payment gateway and blockchain transaction settlement are not yet connected, so no payment can be submitted yet.",
-};
-
-const INTENT_DETAILS: Record<string, { title: string; message: string }> = {
-  donate: DEFAULT_INTENT_DETAIL,
-  documents: {
-    title: "Restricted Documents",
-    message:
-      "You are signed in. No restricted documents have been uploaded for this campaign yet.",
-  },
-  proofs: {
-    title: "Protected Proofs",
-    message:
-      "You are signed in. No protected verification proofs have been attached to this campaign yet.",
-  },
-  contact: {
-    title: "Campaign Owner Contact Details",
-    message:
-      "You are signed in. Campaign owner contact details are not yet published for this campaign.",
-  },
-  chat: {
-    title: "Supporter Group Chat",
-    message:
-      "You are signed in. Group chat is not yet enabled for this campaign.",
-  },
-  comments: {
-    title: "Campaign Comments",
-    message:
-      "You are signed in. Comment posting is not yet enabled for this campaign.",
-  },
-  follow: {
-    title: "Save / Follow Campaign",
-    message:
-      "You are signed in. Campaign saving and following is not yet connected to persistence.",
-  },
-};
 
 export function meta() {
   return [{ title: "Member Campaign Access — KALP" }];
@@ -50,11 +23,30 @@ export function meta() {
 
 export default function MemberCampaignActionRoute() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { pathname, search } = useLocation();
   const [searchParams] = useSearchParams();
-  const intent = searchParams.get("intent") ?? "donate";
-  const detail = INTENT_DETAILS[intent] ?? DEFAULT_INTENT_DETAIL;
-  const { campaign, isLoading } = useCampaign(id);
-  const { email } = useSession();
+  const rawIntent = searchParams.get("intent");
+  const initialIntent: ProtectedIntentKey = isProtectedIntentKey(rawIntent)
+    ? rawIntent
+    : "donate";
+
+  const { authenticated, email, isLoading: sessionLoading } = useSession();
+  const { campaign, isLoading, isError, refetch } = useCampaign(id);
+
+  useEffect(() => {
+    if (!sessionLoading && !authenticated) {
+      navigate(`/auth?return=${encodeURIComponent(pathname + search)}`, {
+        replace: true,
+      });
+    }
+  }, [authenticated, navigate, pathname, search, sessionLoading]);
+
+  const handleGuestRequireAuth = (intentKey: ProtectedIntentKey) => {
+    if (!id) return;
+    const targetPath = `/member/campaigns/${encodeURIComponent(id)}?intent=${encodeURIComponent(intentKey)}`;
+    navigate(`/auth?return=${encodeURIComponent(targetPath)}`);
+  };
 
   return (
     <main className="explore-page">
@@ -71,31 +63,50 @@ export default function MemberCampaignActionRoute() {
           AUTHENTICATED ACCESS{email ? ` · ${email}` : ""}
         </div>
 
-        {isLoading ? (
+        {sessionLoading || isLoading ? (
           <div className="space-y-4 mt-6" aria-busy="true">
             <Skeleton className="h-10 w-2/3 bg-[#e6eee1]" />
             <Skeleton className="h-24 w-full bg-[#e6eee1]" />
           </div>
+        ) : isError ? (
+          <div className="empty-state" role="alert">
+            <h2>We couldn&apos;t load this campaign.</h2>
+            <p>Please try again in a moment.</p>
+            <button
+              type="button"
+              className="text-link"
+              onClick={() => void refetch()}
+            >
+              Try again
+            </button>
+          </div>
+        ) : !campaign ? (
+          <EmptyState
+            message="Campaign not found."
+            description="It may have been removed or is not publicly available."
+            actionLabel="Explore all campaigns"
+            onAction={() => navigate("/explore")}
+          />
         ) : (
           <>
-            <h1>{detail.title}</h1>
-            {campaign && (
-              <p className="member-campaign-ref">
-                Campaign: <strong>{campaign.title}</strong> ({campaign.category}{" "}
-                · {campaign.country})
-              </p>
-            )}
-            <div className="protected-action-notice" role="status">
-              <div className="flex items-center gap-2 mb-2">
-                <IconShieldCheck size={18} aria-hidden="true" />
-                <strong>Authenticated session verified</strong>
-              </div>
-              <p>{detail.message}</p>
-            </div>
+            <h1>{campaign.title}</h1>
+            <p className="member-campaign-ref inline-flex items-center gap-2">
+              <IconShieldCheck size={17} aria-hidden="true" />
+              <span>
+                {campaign.category} · {campaign.country} ·{" "}
+                <strong>{campaign.status}</strong>
+              </span>
+            </p>
+
+            <CampaignMemberWorkspace
+              campaign={campaign}
+              authenticated={authenticated}
+              initialIntent={initialIntent}
+              onGuestRequireAuth={handleGuestRequireAuth}
+            />
           </>
         )}
       </div>
     </main>
   );
 }
-
