@@ -8,6 +8,13 @@
       "when": 1794399755108,
       "tag": "0000_furry_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794406879534,
+      "tag": "0001_funny_mole_man",
+      "breakpoints": true
     }
   ]
 }
