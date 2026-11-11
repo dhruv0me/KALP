@@ -181,6 +181,7 @@ export interface UiCopy {
     about: string;
     explore: string;
     howItWorks: string;
+    transparency?: string;
     contact: string;
     login: string;
     logout: string;
@@ -212,6 +213,7 @@ const EN_COPY: UiCopy = {
     about: "About Us",
     explore: "Explore Campaigns",
     howItWorks: "How It Works",
+    transparency: "Transparency",
     contact: "Contact Us",
     login: "Log in",
     logout: "Log out",
@@ -219,24 +221,24 @@ const EN_COPY: UiCopy = {
     selectLanguage: "Select language",
   },
   hero: {
-    eyebrow: "TRANSPARENT CROWDFUNDING FOR CAMPUS INNOVATION",
-    headlineLine1: "Fund bold ideas.",
-    headlineEmphasis: "Verify",
-    headlineLine2End: "every step.",
+    eyebrow: "A PLACE WHERE GOOD IDEAS FIND SUPPORT",
+    headlineLine1: "Big ideas need people",
+    headlineEmphasis: "who believe",
+    headlineLine2End: "in them.",
     description:
-      "A transparent, blockchain-oriented crowdfunding space built for student projects, college events, hackathon builds, and campus startups — keeping goals, progress, and project records open to every supporter.",
+      "Discover student projects, support campus innovation and follow every step from idea to achievement.",
     exploreCta: "Explore Campaigns",
     startCta: "Start a Campaign",
     scrollIndicator: "SCROLL TO EXPLORE",
   },
   footer: {
     tagline:
-      "Transparent crowdfunding for student projects, college events, hackathon builds, and campus startups.",
+      "A community-driven crowdfunding platform connecting student projects, college events, hackathons, and campus startups with people who believe in them.",
     startCta: "Start a Campaign",
     contactTitle: "Contact Us",
     contactBody:
-      "Official support channels and campus onboarding details will be published here once active.",
-    builtFor: "Built for transparent campus innovation.",
+      "Have questions, need guidance with your campaign, or want to bring KALP to your campus community? Reach out to our team.",
+    builtFor: "Built for campus innovation and community support.",
   },
 };
 

@@ -32,13 +32,19 @@ export function Footer() {
           >
             {copy.nav.about}
           </Link>
-          <Link to="/explore">{copy.nav.explore}</Link>
           <Link
             to="/home#how-it-works"
             onClick={(event) => handleSectionClick(event, "how-it-works")}
           >
             {copy.nav.howItWorks}
           </Link>
+          <Link
+            to="/home#transparency"
+            onClick={(event) => handleSectionClick(event, "transparency")}
+          >
+            {copy.nav.transparency ?? "Transparency"}
+          </Link>
+          <Link to="/explore">{copy.nav.explore}</Link>
           <Link to="/start-campaign">{copy.footer.startCta}</Link>
         </div>
         <div className="footer-contact">

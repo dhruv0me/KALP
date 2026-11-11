@@ -1,6 +1,6 @@
 import { IconArrowUpRight } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { CampaignFilters } from "@/components/campaigns/CampaignFilters";
 import {
   CampaignGrid,
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { useCampaigns } from "@/hooks/use-campaigns";
 import {
   getCountryOptions,
+  type CampaignSortOption,
   type CampaignStatusFilter,
 } from "@/lib/campaigns";
 
@@ -21,16 +22,18 @@ export function meta() {
     {
       name: "description",
       content:
-        "Discover student projects, college events, hackathon projects, and college startups by category, country, and completion status.",
+        "Discover student projects, college events, hackathon builds, and campus startups. Real progress, shared openly.",
     },
   ];
 }
 
 export default function ExploreRoute() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [country, setCountry] = useState("All Countries");
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
+  const [sortOption, setSortOption] = useState<CampaignSortOption>("newest");
 
   const { campaigns, isLoading, isError, refetch } = useCampaigns();
 
@@ -38,27 +41,55 @@ export default function ExploreRoute() {
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return campaigns.filter((campaign) => {
+
+    const matched = campaigns.filter((campaign) => {
       const matchesCategory =
-        category === "All" || campaign.category === category;
+        category === "All" ||
+        campaign.category === category ||
+        (category === "Hackathons" &&
+          (campaign.category === "Hackathons" ||
+            campaign.category === "Hackathon Projects"));
+
       const matchesCountry =
         country === "All Countries" || campaign.country === country;
+
       const matchesStatus =
         statusFilter === "all"
           ? true
           : statusFilter === "completed"
             ? campaign.status === "completed"
             : campaign.status === "published" || campaign.status === "active";
+
       const matchesSearch =
         !query ||
         `${campaign.title} ${campaign.description} ${campaign.category} ${campaign.country}`
           .toLowerCase()
           .includes(query);
+
       return (
         matchesCategory && matchesCountry && matchesStatus && matchesSearch
       );
     });
-  }, [campaigns, category, country, statusFilter, search]);
+
+    return [...matched].sort((a, b) => {
+      switch (sortOption) {
+        case "target-high":
+          return (b.targetAmount ?? 0) - (a.targetAmount ?? 0);
+        case "target-low":
+          return (a.targetAmount ?? Infinity) - (b.targetAmount ?? Infinity);
+        case "most-funded": {
+          const ratioA = (a.collectedAmount ?? 0) / (a.targetAmount || 1);
+          const ratioB = (b.collectedAmount ?? 0) / (b.targetAmount || 1);
+          return ratioB - ratioA;
+        }
+        case "alphabetical":
+          return a.title.localeCompare(b.title);
+        case "newest":
+        default:
+          return 0;
+      }
+    });
+  }, [campaigns, category, country, statusFilter, search, sortOption]);
 
   const hasFilters =
     Boolean(search.trim()) ||
@@ -71,19 +102,8 @@ export default function ExploreRoute() {
     setCategory("All");
     setCountry("All Countries");
     setStatusFilter("all");
+    setSortOption("newest");
   };
-
-  const emptyMessage = !hasFilters && campaigns.length === 0
-    ? "No campaigns available yet."
-    : search.trim()
-      ? "No matching campaigns found. Try another search."
-      : statusFilter === "completed"
-        ? "No completed projects yet."
-        : country !== "All Countries"
-          ? "No campaigns currently available in this country."
-          : category !== "All"
-            ? "No campaigns found in this category."
-            : "No campaigns available yet.";
 
   return (
     <main className="explore-page">
@@ -91,14 +111,14 @@ export default function ExploreRoute() {
         <div>
           <div className="eyebrow">
             <span className="eyebrow-dot" />
-            TRANSPARENT CAMPAIGN DISCOVERY
+            CAMPAIGN DISCOVERY
           </div>
           <h1>
-            Discover something <em>real.</em>
+            Discover something <em>meaningful.</em>
           </h1>
           <p>
-            Explore student projects, college events, hackathon builds, and
-            college startups backed by real database records.
+            Explore student projects, campus events, hackathon builds, and
+            emerging startups driven by passionate campus creators.
           </p>
         </div>
         <Link className="button button-outline" to="/start-campaign">
@@ -120,13 +140,15 @@ export default function ExploreRoute() {
         onSelectCategory={setCategory}
         selectedStatus={statusFilter}
         onSelectStatus={setStatusFilter}
+        selectedSort={sortOption}
+        onSelectSort={setSortOption}
       />
 
       <div className="results-heading">
-        <span>EXPLORE CAMPAIGNS</span>
+        <span>CAMPAIGNS</span>
         <span>
           {isLoading
-            ? "LOADING RECORDS"
+            ? "LOADING..."
             : `${filtered.length} ${filtered.length === 1 ? "CAMPAIGN" : "CAMPAIGNS"}`}
           <span className="mini-star" aria-hidden="true">
             ✳
@@ -140,7 +162,8 @@ export default function ExploreRoute() {
         <div className="empty-state" role="alert">
           <h2>We couldn&apos;t load campaigns.</h2>
           <p>
-            Unable to retrieve campaign records right now. Please try again.
+            Unable to retrieve campaigns right now. Please try again in a
+            moment.
           </p>
           <button
             type="button"
@@ -152,16 +175,26 @@ export default function ExploreRoute() {
         </div>
       ) : filtered.length > 0 ? (
         <CampaignGrid campaigns={filtered} />
+      ) : campaigns.length === 0 && !hasFilters ? (
+        <EmptyState
+          message="Something exciting could start here."
+          description="No campaigns are available just yet. Check back soon or start a campaign of your own."
+          actionLabel="Start a Campaign"
+          onAction={() => navigate("/start-campaign")}
+        />
+      ) : statusFilter === "completed" && filtered.length === 0 ? (
+        <EmptyState
+          message="No completed projects yet."
+          description="Completed campaigns will appear here once student teams reach their goals."
+          actionLabel="View all campaigns"
+          onAction={() => setStatusFilter("all")}
+        />
       ) : (
         <EmptyState
-          message={emptyMessage}
-          description={
-            campaigns.length === 0 && !hasFilters
-              ? "Once verified student projects, college events, hackathons, or startups are published, they will appear here."
-              : "Try clearing or adjusting your active search and filter selections."
-          }
-          actionLabel={hasFilters ? "Clear filters" : "Explore all campaigns"}
-          onAction={hasFilters ? clearAllFilters : undefined}
+          message="No campaigns found. Try changing your filters."
+          description="Try adjusting your search terms or clearing selected categories and country filters."
+          actionLabel="Clear filters"
+          onAction={clearAllFilters}
         />
       )}
     </main>

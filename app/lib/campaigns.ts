@@ -2,9 +2,20 @@ export const CAMPAIGN_CATEGORIES = [
   "All",
   "Student Projects",
   "College Events",
-  "Hackathon Projects",
+  "Hackathons",
   "College Startups",
 ] as const;
+
+export const CAMPAIGN_SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "target-high", label: "Target: High to Low" },
+  { value: "target-low", label: "Target: Low to High" },
+  { value: "most-funded", label: "Most funded" },
+  { value: "alphabetical", label: "Title: A to Z" },
+] as const;
+
+export type CampaignSortOption =
+  (typeof CAMPAIGN_SORT_OPTIONS)[number]["value"];
 
 export const CREATE_CAMPAIGN_CATEGORIES = [
   "Student Projects",

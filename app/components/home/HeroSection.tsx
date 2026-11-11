@@ -2,6 +2,7 @@ import {
   IconArrowDown,
   IconArrowRight,
   IconArrowUpRight,
+  IconBulb,
   IconCode,
   IconCoins,
   IconHeartHandshake,
@@ -9,7 +10,7 @@ import {
   IconShieldCheck,
   IconSparkles,
 } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { scrollToSectionId } from "@/components/layout/Navbar";
 import { useLanguage } from "@/hooks/use-language";
@@ -19,15 +20,38 @@ interface HeroSectionProps {
 }
 
 export function DefaultHeroIllustration() {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    setTilt({ x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
+  const tiltStyle = {
+    "--tilt-x": tilt.x,
+    "--tilt-y": tilt.y,
+  } as React.CSSProperties;
+
   return (
     <div
-      className="hero-art"
-      aria-label="Illustration of transparent donations, connected student projects, and campus innovation"
+      className="hero-art hero-art-interactive"
+      aria-label="Illustration of transparent campus crowdfunding and community collaboration"
       role="img"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={tiltStyle}
     >
       <div className="art-orbit orbit-one" />
       <div className="art-orbit orbit-two" />
       <div className="art-sun" />
+      <div className="art-halo" />
 
       <svg
         className="art-network-lines"
@@ -36,28 +60,32 @@ export function DefaultHeroIllustration() {
         aria-hidden="true"
       >
         <path
+          className="animated-dash-path"
           d="M95 140 C 160 155, 185 185, 210 215"
           stroke="#9dc282"
-          strokeWidth="1.6"
-          strokeDasharray="5 5"
+          strokeWidth="1.8"
+          strokeDasharray="6 6"
         />
         <path
+          className="animated-dash-path reverse"
           d="M325 130 C 265 150, 235 180, 210 215"
           stroke="#9dc282"
-          strokeWidth="1.6"
-          strokeDasharray="5 5"
+          strokeWidth="1.8"
+          strokeDasharray="6 6"
         />
         <path
+          className="animated-dash-path"
           d="M210 215 C 180 265, 130 285, 105 295"
           stroke="#9dc282"
-          strokeWidth="1.6"
-          strokeDasharray="5 5"
+          strokeWidth="1.8"
+          strokeDasharray="6 6"
         />
         <path
+          className="animated-dash-path reverse"
           d="M210 215 C 245 265, 290 285, 325 295"
           stroke="#9dc282"
-          strokeWidth="1.6"
-          strokeDasharray="5 5"
+          strokeWidth="1.8"
+          strokeDasharray="6 6"
         />
         <circle cx="210" cy="215" r="34" fill="#234c38" />
         <circle
@@ -72,7 +100,7 @@ export function DefaultHeroIllustration() {
 
       <div className="art-core-hub" aria-hidden="true">
         <IconShieldCheck size={28} stroke={1.7} />
-        <span>OPEN LEDGER</span>
+        <span>KALP COMMUNITY</span>
       </div>
 
       <div className="art-star star-one" aria-hidden="true">
@@ -88,9 +116,9 @@ export function DefaultHeroIllustration() {
       <div className="art-card art-card-one">
         <IconCoins size={21} aria-hidden="true" />
         <span>
-          VERIFIED SUPPORT
+          MEANINGFUL GOALS
           <br />
-          <strong>TRACEABLE FUNDS</strong>
+          <strong>REAL PROGRESS</strong>
         </span>
       </div>
 
@@ -108,7 +136,7 @@ export function DefaultHeroIllustration() {
         <span>
           HACKATHONS
           <br />
-          <strong>OPEN BUILDS</strong>
+          <strong>CREATIVE BUILDS</strong>
         </span>
       </div>
 
@@ -117,8 +145,13 @@ export function DefaultHeroIllustration() {
         <span>
           COLLEGE STARTUPS
           <br />
-          <strong>SHARED TRUST</strong>
+          <strong>SHARED GOALS</strong>
         </span>
+      </div>
+
+      <div className="art-floating-pill pill-one" aria-hidden="true">
+        <IconBulb size={13} />
+        <span>Idea to Outcome</span>
       </div>
 
       <div className="art-dot dot-one" />
@@ -135,14 +168,17 @@ export function HeroSection({ illustration }: HeroSectionProps) {
       <div className="hero-copy">
         <div className="eyebrow">
           <span className="eyebrow-dot" />
-          {copy.hero.eyebrow}
+          A PLACE WHERE GOOD IDEAS FIND SUPPORT
         </div>
         <h1>
-          {copy.hero.headlineLine1}
+          Big ideas need people
           <br />
-          <em>{copy.hero.headlineEmphasis}</em> {copy.hero.headlineLine2End}
+          <em>who believe</em> in them.
         </h1>
-        <p>{copy.hero.description}</p>
+        <p>
+          Discover student projects, support campus innovation and follow every
+          step from idea to achievement.
+        </p>
         <div className="hero-buttons">
           <Link className="button button-dark" to="/explore">
             {copy.hero.exploreCta}{" "}
@@ -156,10 +192,7 @@ export function HeroSection({ illustration }: HeroSectionProps) {
           <span className="note-icon" aria-hidden="true">
             <IconSparkles size={16} />
           </span>
-          <span>
-            Built for student projects, college events, hackathons, and campus
-            startups.
-          </span>
+          <span>Every number tells a real story.</span>
         </div>
       </div>
 
@@ -179,7 +212,7 @@ export function HeroSection({ illustration }: HeroSectionProps) {
         <IconArrowDown size={16} aria-hidden="true" />
       </a>
       <span className="hero-side-label" aria-hidden="true">
-        TRANSPARENT CAMPUS CROWDFUNDING
+        COMMUNITY CROWDFUNDING
       </span>
     </section>
   );

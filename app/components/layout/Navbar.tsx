@@ -119,17 +119,23 @@ export function Navbar() {
             {copy.nav.about}
           </Link>
           <Link
+            to="/home#how-it-works"
+            onClick={(event) => handleSectionClick(event, "how-it-works")}
+          >
+            {copy.nav.howItWorks}
+          </Link>
+          <Link
+            to="/home#transparency"
+            onClick={(event) => handleSectionClick(event, "transparency")}
+          >
+            {copy.nav.transparency ?? "Transparency"}
+          </Link>
+          <Link
             onClick={() => setOpen(false)}
             to="/explore"
             aria-current={pathname === "/explore" ? "page" : undefined}
           >
             {copy.nav.explore}
-          </Link>
-          <Link
-            to="/home#how-it-works"
-            onClick={(event) => handleSectionClick(event, "how-it-works")}
-          >
-            {copy.nav.howItWorks}
           </Link>
           <Link
             to="/home#contact"
