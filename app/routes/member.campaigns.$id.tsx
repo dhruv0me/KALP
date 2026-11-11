@@ -18,7 +18,7 @@ import { useCampaign } from "@/hooks/use-campaigns";
 import { useSession } from "@/hooks/use-session";
 
 export function meta() {
-  return [{ title: "Member Campaign Access — KALP" }];
+  return [{ title: "KALP" }];
 }
 
 export default function MemberCampaignActionRoute() {

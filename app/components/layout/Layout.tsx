@@ -18,6 +18,10 @@ export function Layout({ children }: LayoutProps) {
     pathname === "/" || pathname === "/auth" || pathname === "/auth/";
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.scrollY !== 0) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+
     if (hash) {
       const targetId = hash.slice(1);
       const timer = window.setTimeout(() => {
@@ -31,14 +35,14 @@ export function Layout({ children }: LayoutProps) {
   return (
     <HeaderActionsProvider>
       <LanguageProvider>
-        <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-[#f9faf5] text-foreground">
           <div
             ref={mainRef}
-            className="agent-native-app-main min-w-0 flex-1 overflow-y-auto overscroll-contain"
+            className="agent-native-app-main min-w-0 flex-1 overflow-y-auto overscroll-contain flex flex-col bg-[#f9faf5]"
           >
             <CursorTrail />
             {!isStandaloneAuthRoute && <Navbar />}
-            {children}
+            <div className="flex-1 flex flex-col">{children}</div>
             {!isStandaloneAuthRoute && <Footer />}
             {!isStandaloneAuthRoute && <BackToTop />}
           </div>

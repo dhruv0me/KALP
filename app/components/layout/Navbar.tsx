@@ -18,8 +18,41 @@ import { useSession } from "@/hooks/use-session";
 import { clearSessionCookie } from "@/lib/auth-client";
 
 export function scrollToSectionId(id: string) {
+  if (typeof window !== "undefined" && window.scrollY !== 0) {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
   const target = document.getElementById(id);
-  if (target) {
+  const main = document.querySelector<HTMLElement>(".agent-native-app-main");
+
+  if (!target) return;
+
+  if (main) {
+    if (id === "contact") {
+      main.scrollTo({
+        top: main.scrollHeight,
+        behavior: "smooth",
+      });
+      return;
+    }
+
+    const mainRect = main.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const targetTop = targetRect.top - mainRect.top + main.scrollTop;
+
+    main.scrollTo({
+      top: Math.max(0, targetTop - 70),
+      behavior: "smooth",
+    });
+    return;
+  }
+
+  if (id === "contact") {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  } else {
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }

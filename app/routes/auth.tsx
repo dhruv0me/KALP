@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth-client";
 
 export function meta() {
-  return [{ title: "Sign In — KALP" }];
+  return [{ title: "KALP" }];
 }
 
 export default function AuthRoute() {

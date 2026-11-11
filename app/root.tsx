@@ -54,13 +54,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />
         {/* guard:allow-raw-color - theme-color metadata requires a concrete browser-chrome color. */}
-        <meta name="theme-color" content="#18181B" />
+        <meta name="theme-color" content="#fbfcf8" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
+          content="default"
         />
         <meta name="apple-mobile-web-app-title" content={APP_TITLE} />
+        <title>{APP_TITLE}</title>
         <link rel="icon" type="image/png" href={appPath("/kalp-logo.png")} />
         <link rel="apple-touch-icon" href={appPath("/kalp-logo.png")} />
         <Meta />

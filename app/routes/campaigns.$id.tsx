@@ -18,7 +18,7 @@ import { useSession } from "@/hooks/use-session";
 import { formatCampaignAmount, getFundingProgress } from "@/lib/campaigns";
 
 export function meta() {
-  return [{ title: "Campaign Details — KALP" }];
+  return [{ title: "KALP" }];
 }
 
 export default function CampaignDetailsRoute() {

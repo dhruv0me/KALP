@@ -31,7 +31,9 @@ export function BackToTop() {
         document
           .querySelector(".agent-native-app-main")
           ?.scrollTo({ top: 0, behavior: "smooth" });
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (typeof window !== "undefined" && window.scrollY !== 0) {
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
       }}
     >
       <IconArrowUp size={20} aria-hidden="true" />

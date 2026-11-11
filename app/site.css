@@ -1,3 +1,10 @@
+html, body {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: #f9faf5;
+}
 html { scroll-behavior: smooth; }
 .agent-native-app-main { scroll-behavior: smooth; background: #f9faf5; }
 * { box-sizing: border-box; }
@@ -161,7 +168,7 @@ em { font-weight: 400; color: #789d65; }
 .bottom-cta span { display: block; color: #708a70; font-weight: 700; font-size: 10px; letter-spacing: 1.5px; margin-bottom: 16px; }
 .bottom-cta-desc { color: #647567; font-size: 14px; line-height: 1.8; max-width: 520px; margin-top: 10px; }
 
-.footer { background: #1d3e2e; padding: 58px 8% 24px; color: #d0dbce; }
+.footer { background: #1d3e2e; padding: 58px 8% 24px; color: #d0dbce; margin-top: auto; }
 .footer .brand { color: #fff; }
 .footer .brand-mark span { background: #abc990; }
 .footer .brand-mark span:nth-child(2), .footer .brand-mark span:nth-child(3) { background: #668e6a; }

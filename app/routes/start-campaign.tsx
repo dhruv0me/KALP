@@ -21,7 +21,7 @@ import {
 } from "@/lib/campaigns";
 
 export function meta() {
-  return [{ title: "Start a Campaign & Creator Studio — KALP" }];
+  return [{ title: "KALP" }];
 }
 
 export default function StartCampaignRoute() {

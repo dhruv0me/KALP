@@ -11,7 +11,7 @@ import {
 
 export function meta() {
   return [
-    { title: "Welcome to KALP — Sign In" },
+    { title: "KALP" },
     {
       name: "description",
       content:

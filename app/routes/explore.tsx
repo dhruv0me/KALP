@@ -18,7 +18,7 @@ import {
 
 export function meta() {
   return [
-    { title: "Explore Campaigns — KALP" },
+    { title: "KALP" },
     {
       name: "description",
       content:

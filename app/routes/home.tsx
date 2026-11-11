@@ -18,7 +18,7 @@ import { usePlatformStats } from "@/hooks/use-campaigns";
 
 export function meta() {
   return [
-    { title: "KALP — Community Crowdfunding for Campus Innovation" },
+    { title: "KALP" },
     {
       name: "description",
       content:
