@@ -90,6 +90,8 @@ function isRoutePublic(pathname: string): boolean {
     pathname === "/" ||
     pathname === "/explore" ||
     pathname === "/explore/" ||
+    pathname === "/auth" ||
+    pathname === "/auth/" ||
     pathname === "/campaigns" ||
     pathname.startsWith("/campaigns/")
   );

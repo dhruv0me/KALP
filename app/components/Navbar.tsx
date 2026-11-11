@@ -1,4 +1,3 @@
-import { appPath } from "@agent-native/core/client/api-path";
 import {
   IconArrowUpRight,
   IconCheck,
@@ -29,7 +28,7 @@ export function Navbar() {
   const { pathname, hash } = useLocation();
   const { authenticated, email } = useSession();
   const { code, language, languages, copy, setLanguage } = useLanguage();
-  const signInHref = appPath("/sign-in");
+  const signInHref = "/auth";
 
   useEffect(() => {
     if (!langOpen) return;
@@ -134,10 +133,14 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <a className="login-link-mobile" href={signInHref}>
+              <Link
+                className="login-link-mobile"
+                to={signInHref}
+                onClick={() => setOpen(false)}
+              >
                 <IconUserCircle size={17} aria-hidden="true" />
                 {copy.nav.login}
-              </a>
+              </Link>
             )}
           </div>
         </nav>
@@ -241,15 +244,15 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <a
+            <Link
               className="login-link"
-              href={signInHref}
+              to={signInHref}
               aria-label={copy.nav.login}
             >
               <IconUserCircle size={17} aria-hidden="true" />
               <span>{copy.nav.login}</span>
               <IconArrowUpRight size={15} aria-hidden="true" />
-            </a>
+            </Link>
           )}
         </div>
 

@@ -14,6 +14,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { pathname, hash } = useLocation();
   const mainRef = useRef<HTMLDivElement>(null);
+  const isStandaloneAuthRoute = pathname === "/auth" || pathname === "/auth/";
 
   useEffect(() => {
     if (hash) {
@@ -35,10 +36,10 @@ export function Layout({ children }: LayoutProps) {
             className="agent-native-app-main min-w-0 flex-1 overflow-y-auto overscroll-contain"
           >
             <CursorTrail />
-            <Navbar />
+            {!isStandaloneAuthRoute && <Navbar />}
             {children}
-            <Footer />
-            <BackToTop />
+            {!isStandaloneAuthRoute && <Footer />}
+            {!isStandaloneAuthRoute && <BackToTop />}
           </div>
         </div>
       </LanguageProvider>

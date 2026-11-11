@@ -2,7 +2,7 @@ import { createAuthPlugin } from "@agent-native/core/server";
 
 export default createAuthPlugin({
   rootAuth: false,
-  workspaceAppPublicPaths: ["/", "/explore", "/campaigns"],
+  workspaceAppPublicPaths: ["/", "/explore", "/campaigns", "/auth"],
   publicPaths: [
     "/_agent-native/actions/list-campaigns",
     "/_agent-native/actions/get-campaign",

@@ -873,8 +873,7 @@ export function isSupportedLanguage(value: string): value is LanguageCode {
 
 export function getLanguageOption(code: LanguageCode): LanguageOption {
   return (
-    SUPPORTED_LANGUAGES.find((item) => item.code === code) ??
-    SUPPORTED_LANGUAGES[0]
+    SUPPORTED_LANGUAGES.find((item) => item.code === code) ?? DEFAULT_LANGUAGE
   );
 }
 
