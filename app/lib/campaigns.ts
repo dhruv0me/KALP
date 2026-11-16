@@ -88,6 +88,16 @@ export interface CampaignChatMessage {
   createdAt: string;
 }
 
+export interface CampaignMilestoneItem {
+  id: string;
+  title: string;
+  description: string;
+  proposedBudget: number;
+  deadline: string | null;
+  completionStatus: string;
+  approvalStatus: string;
+}
+
 export interface CampaignMemberData {
   campaignId: string;
   isOwner: boolean;
@@ -99,6 +109,7 @@ export interface CampaignMemberData {
   } | null;
   restrictedDocuments: RestrictedDocumentItem[];
   protectedProofs: ProtectedProofItem[];
+  milestones?: CampaignMilestoneItem[];
   comments: CampaignComment[];
   chatMessages: CampaignChatMessage[];
 }

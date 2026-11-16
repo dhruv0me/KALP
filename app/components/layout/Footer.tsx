@@ -11,9 +11,8 @@ export function Footer() {
     event: React.MouseEvent<HTMLAnchorElement>,
     sectionId: string,
   ) => {
+    event.preventDefault();
     if (pathname === "/home" || pathname === "/home/") {
-      event.preventDefault();
-      window.history.replaceState(null, "", `/home#${sectionId}`);
       scrollToSectionId(sectionId);
     }
   };

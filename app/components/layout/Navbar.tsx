@@ -22,20 +22,27 @@ export function scrollToSectionId(id: string) {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  const target = document.getElementById(id);
   const main = document.querySelector<HTMLElement>(".agent-native-app-main");
 
-  if (!target) return;
-
-  if (main) {
-    if (id === "contact") {
+  if (id === "contact") {
+    if (main) {
       main.scrollTo({
         top: main.scrollHeight,
         behavior: "smooth",
       });
       return;
     }
+    const target = document.getElementById("contact");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+    return;
+  }
 
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  if (main) {
     const mainRect = main.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     const targetTop = targetRect.top - mainRect.top + main.scrollTop;
@@ -47,14 +54,7 @@ export function scrollToSectionId(id: string) {
     return;
   }
 
-  if (id === "contact") {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: "smooth",
-    });
-  } else {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function Navbar() {
@@ -120,10 +120,11 @@ export function Navbar() {
     sectionId: string,
   ) => {
     setOpen(false);
+    event.preventDefault();
     if (pathname === "/home" || pathname === "/home/") {
-      event.preventDefault();
-      window.history.replaceState(null, "", `/home#${sectionId}`);
       scrollToSectionId(sectionId);
+    } else {
+      navigate(`/home#${sectionId}`);
     }
   };
 

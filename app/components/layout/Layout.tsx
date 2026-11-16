@@ -18,18 +18,29 @@ export function Layout({ children }: LayoutProps) {
     pathname === "/" || pathname === "/auth" || pathname === "/auth/";
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.scrollY !== 0) {
-      window.scrollTo({ top: 0, behavior: "instant" });
-    }
+    const resetWindowScroll = () => {
+      if (typeof window !== "undefined" && window.scrollY !== 0) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+    };
+
+    resetWindowScroll();
+    window.addEventListener("scroll", resetWindowScroll, { passive: true });
 
     if (hash) {
       const targetId = hash.slice(1);
       const timer = window.setTimeout(() => {
         scrollToSectionId(targetId);
-      }, 60);
-      return () => window.clearTimeout(timer);
+        resetWindowScroll();
+      }, 80);
+      return () => {
+        window.clearTimeout(timer);
+        window.removeEventListener("scroll", resetWindowScroll);
+      };
     }
     mainRef.current?.scrollTo({ top: 0, behavior: "auto" });
+
+    return () => window.removeEventListener("scroll", resetWindowScroll);
   }, [pathname, hash]);
 
   return (

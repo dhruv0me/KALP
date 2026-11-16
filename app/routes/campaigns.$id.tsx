@@ -18,7 +18,7 @@ import { useSession } from "@/hooks/use-session";
 import { formatCampaignAmount, getFundingProgress } from "@/lib/campaigns";
 
 export function meta() {
-  return [{ title: "KALP" }];
+  return [{ title: "kalpa" }];
 }
 
 export default function CampaignDetailsRoute() {
@@ -156,6 +156,7 @@ export default function CampaignDetailsRoute() {
             campaign={campaign}
             authenticated={authenticated}
             onGuestRequireAuth={handleGuestRequireAuth}
+            onCampaignUpdated={() => void refetch()}
           />
         </div>
       )}

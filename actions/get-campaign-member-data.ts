@@ -30,6 +30,17 @@ export default defineAction({
       .nullable(),
     restrictedDocuments: z.array(restrictedDocumentSchema),
     protectedProofs: z.array(protectedProofSchema),
+    milestones: z.array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string(),
+        proposedBudget: z.number(),
+        deadline: z.string().nullable(),
+        completionStatus: z.string(),
+        approvalStatus: z.string(),
+      }),
+    ),
     comments: z.array(
       z.object({
         id: z.string(),
@@ -63,7 +74,7 @@ export default defineAction({
       userEmail,
     );
 
-    const [bookmarkRows, comments, chatMessages] = await Promise.all([
+    const [bookmarkRows, comments, chatMessages, milestones] = await Promise.all([
       db
         .select({ id: schema.campaignBookmarks.id })
         .from(schema.campaignBookmarks)
@@ -98,6 +109,19 @@ export default defineAction({
         .where(eq(schema.campaignChatMessages.campaignId, campaignId))
         .orderBy(asc(schema.campaignChatMessages.createdAt))
         .limit(100),
+      db
+        .select({
+          id: schema.campaignMilestones.id,
+          title: schema.campaignMilestones.title,
+          description: schema.campaignMilestones.description,
+          proposedBudget: schema.campaignMilestones.proposedBudget,
+          deadline: schema.campaignMilestones.deadline,
+          completionStatus: schema.campaignMilestones.completionStatus,
+          approvalStatus: schema.campaignMilestones.approvalStatus,
+        })
+        .from(schema.campaignMilestones)
+        .where(eq(schema.campaignMilestones.campaignId, campaignId))
+        .orderBy(asc(schema.campaignMilestones.createdAt)),
     ]);
 
     const hasOwnerContact = Boolean(
@@ -119,6 +143,7 @@ export default defineAction({
         campaign.restrictedDocuments,
       ),
       protectedProofs: parseProtectedProofs(campaign.protectedProofs),
+      milestones,
       comments,
       chatMessages,
     };

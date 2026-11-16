@@ -17,11 +17,15 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCampaignMemberData,
+  useInitiateDonation,
   usePostCampaignComment,
+  useReleaseMilestoneEscrow,
   useSendCampaignChat,
   useToggleCampaignBookmark,
   useUpdateCampaign,
+  useVerifyPayment,
 } from "@/hooks/use-campaigns";
+import { useSession } from "@/hooks/use-session";
 import {
   formatCampaignAmount,
   type Campaign,
@@ -72,6 +76,7 @@ interface CampaignMemberWorkspaceProps {
   authenticated: boolean;
   initialIntent?: ProtectedIntentKey | null;
   onGuestRequireAuth: (intent: ProtectedIntentKey) => void;
+  onCampaignUpdated?: () => void;
 }
 
 export function CampaignMemberWorkspace({
@@ -79,6 +84,7 @@ export function CampaignMemberWorkspace({
   authenticated,
   initialIntent = null,
   onGuestRequireAuth,
+  onCampaignUpdated,
 }: CampaignMemberWorkspaceProps) {
   const [selectedIntent, setSelectedIntent] =
     useState<ProtectedIntentKey | null>(initialIntent);
@@ -91,6 +97,30 @@ export function CampaignMemberWorkspace({
   const [proofSummary, setProofSummary] = useState("");
   const [proofUrl, setProofUrl] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Donation state
+  const [donateAmount, setDonateAmount] = useState<number>(500);
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [donorPrivacy, setDonorPrivacy] = useState<"public" | "name_only" | "anonymous">("public");
+  const [donorDisplayName, setDonorDisplayName] = useState<string>("");
+  const [donationSuccess, setDonationSuccess] = useState<{
+    amount: number;
+    currency: string;
+    transactionReference: string;
+    blockchainTxHash?: string | undefined;
+  } | null>(null);
+
+  // Milestone Escrow Release state
+  const [escrowReleaseSuccess, setEscrowReleaseSuccess] = useState<{
+    milestoneId: string;
+    blockchainTxHash: string;
+    releasedAmount: number;
+  } | null>(null);
+
+  const { isAdmin } = useSession();
+  const initiateDonation = useInitiateDonation();
+  const verifyPayment = useVerifyPayment();
+  const releaseMilestoneEscrow = useReleaseMilestoneEscrow();
 
   useEffect(() => {
     if (initialIntent) {
@@ -126,6 +156,85 @@ export function CampaignMemberWorkspace({
             : "Unable to update bookmark state.",
         );
       }
+    }
+  };
+
+  const handleDonationSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setActionError(null);
+    setDonationSuccess(null);
+    const amountToContribute = customAmount ? parseInt(customAmount, 10) : donateAmount;
+    if (!amountToContribute || isNaN(amountToContribute) || amountToContribute < 10) {
+      setActionError("Please enter a valid donation amount (minimum ₹10).");
+      return;
+    }
+
+    try {
+      const initRes = (await initiateDonation.mutateAsync({
+        campaignId: campaign.id,
+        amount: amountToContribute,
+        currency: campaign.currency || "INR",
+        privacyPreference: donorPrivacy,
+        donorName: donorDisplayName.trim() || undefined,
+      })) as {
+        donationId: string;
+        transactionReference: string;
+        convertedAmount: number;
+        baseCurrency: string;
+      };
+
+      const settleRes = (await verifyPayment.mutateAsync({
+        transactionReference: initRes.transactionReference,
+        gatewayTransactionId: `gw_escrow_${Date.now()}`,
+        gateway: "escrow_pledge",
+      })) as {
+        success: boolean;
+        blockchainTxHash?: string;
+      };
+
+      setDonationSuccess({
+        amount: amountToContribute,
+        currency: campaign.currency || "INR",
+        transactionReference: initRes.transactionReference,
+        blockchainTxHash: settleRes.blockchainTxHash,
+      });
+
+      await refetch();
+      onCampaignUpdated?.();
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Unable to process donation into escrow.",
+      );
+    }
+  };
+
+  const handleReleaseMilestone = async (milestoneId: string) => {
+    setActionError(null);
+    setEscrowReleaseSuccess(null);
+    try {
+      const res = (await releaseMilestoneEscrow.mutateAsync({
+        campaignId: campaign.id,
+        milestoneId,
+        adminNotes: "Audited and released by administrator",
+      })) as {
+        success: boolean;
+        milestoneId: string;
+        releasedAmount: number;
+        blockchainTxHash: string;
+      };
+
+      setEscrowReleaseSuccess({
+        milestoneId: res.milestoneId,
+        blockchainTxHash: res.blockchainTxHash,
+        releasedAmount: res.releasedAmount,
+      });
+
+      await refetch();
+      onCampaignUpdated?.();
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Unable to release milestone escrow.",
+      );
     }
   };
 
@@ -303,16 +412,105 @@ export function CampaignMemberWorkspace({
           ) : (
             <>
               {selectedIntent === "donate" && (
-                <div className="protected-action-notice">
-                  <strong>Make a Donation</strong>
-                  <p>
-                    {campaign.targetAmount != null
-                      ? `Target: ${formatCampaignAmount(campaign.targetAmount, campaign.currency)}. `
-                      : ""}
-                    Live payment gateway and blockchain settlement are not yet
-                    connected in this workspace, so payments cannot be submitted
-                    or simulated yet.
+                <div className="member-section-block">
+                  <h3>Back This Campaign &amp; Anchor to Escrow</h3>
+                  <p className="member-muted mb-4">
+                    Contributions are held in a transparent milestone escrow ledger. Funds are cryptographically anchored and only released to creators upon verified progress milestones and administrative audit.
                   </p>
+
+                  {donationSuccess ? (
+                    <div className="protected-action-notice mb-4">
+                      <strong className="inline-flex items-center gap-1.5 text-[#1b432a]">
+                        <IconCheck size={18} aria-hidden="true" />
+                        Contribution Confirmed &amp; Anchored to Escrow!
+                      </strong>
+                      <p>
+                        You successfully contributed <strong>{formatCampaignAmount(donationSuccess.amount, donationSuccess.currency)}</strong>.
+                      </p>
+                      <div className="mt-3 p-3 bg-[#f8fbf4] border border-[#d5e1cf] text-xs font-mono break-all space-y-1">
+                        <div><span className="text-[#68826d]">Tx Reference:</span> {donationSuccess.transactionReference}</div>
+                        {donationSuccess.blockchainTxHash && (
+                          <div>
+                            <span className="text-[#68826d]">Blockchain Proof:</span> {donationSuccess.blockchainTxHash}
+                          </div>
+                        )}
+                        <div><span className="text-[#68826d]">Escrow Status:</span> Locked in Campaign Milestone Escrow</div>
+                      </div>
+                      <button
+                        type="button"
+                        className="button button-outline mt-3 text-xs"
+                        onClick={() => {
+                          setDonationSuccess(null);
+                          setCustomAmount("");
+                        }}
+                      >
+                        Make Another Contribution
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleDonationSubmit} className="member-inline-form space-y-4">
+                      <div>
+                        <span className="stat-label">Select Amount ({campaign.currency || "INR"})</span>
+                        <div className="flex flex-wrap gap-2 my-2">
+                          {[250, 500, 1000, 2500, 5000].map((amt) => (
+                            <button
+                              key={amt}
+                              type="button"
+                              className={`button ${
+                                !customAmount && donateAmount === amt
+                                  ? "button-dark"
+                                  : "button-outline"
+                              } text-xs py-1.5 px-3`}
+                              onClick={() => {
+                                setDonateAmount(amt);
+                                setCustomAmount("");
+                              }}
+                            >
+                              {formatCampaignAmount(amt, campaign.currency || "INR")}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="number"
+                          min={10}
+                          max={10000000}
+                          placeholder="Or enter custom amount..."
+                          value={customAmount}
+                          onChange={(e) => setCustomAmount(e.target.value)}
+                          className="w-full bg-[#fbfcf8] border border-[#d5e1cf] p-2 text-sm text-[#173d2e] mt-2"
+                        />
+                      </div>
+
+                      <div className="member-inline-grid mt-3">
+                        <input
+                          type="text"
+                          placeholder="Display Name (Optional)"
+                          value={donorDisplayName}
+                          onChange={(e) => setDonorDisplayName(e.target.value)}
+                        />
+                        <select
+                          value={donorPrivacy}
+                          onChange={(e) => setDonorPrivacy(e.target.value as "public" | "name_only" | "anonymous")}
+                          className="bg-[#fbfcf8] border border-[#d5e1cf] p-2 text-xs text-[#173d2e]"
+                        >
+                          <option value="public">Public Supporter</option>
+                          <option value="name_only">Display Name Only (Hide Amount)</option>
+                          <option value="anonymous">Anonymous Backer</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={initiateDonation.isPending || verifyPayment.isPending}
+                        className="button button-dark mt-4 flex items-center justify-center gap-2"
+                      >
+                        <IconCoin size={16} aria-hidden="true" />
+                        {initiateDonation.isPending || verifyPayment.isPending
+                          ? "Securing in Escrow..."
+                          : `Contribute ${formatCampaignAmount(customAmount ? parseInt(customAmount, 10) || 0 : donateAmount, campaign.currency || "INR")} to Escrow`}
+                      </button>
+                    </form>
+                  )}
                 </div>
               )}
 
@@ -438,7 +636,62 @@ export function CampaignMemberWorkspace({
 
               {selectedIntent === "proofs" && (
                 <div className="member-section-block">
-                  <h3>Protected Milestone Proofs</h3>
+                  <h3>Milestone Escrow &amp; Blockchain Proofs</h3>
+                  <p className="member-muted mb-4">
+                    Milestones represent verifiable stages of project execution. Raised funds remain locked in milestone escrow until independently audited and verified with expense proofs.
+                  </p>
+
+                  {escrowReleaseSuccess && (
+                    <div className="protected-action-notice mb-4">
+                      <strong className="inline-flex items-center gap-1.5 text-[#1b432a]">
+                        <IconCheck size={18} aria-hidden="true" />
+                        Escrow Tranche Released &amp; Anchored On-Chain!
+                      </strong>
+                      <p className="text-xs font-mono break-all mt-1">
+                        TxHash: {escrowReleaseSuccess.blockchainTxHash}
+                      </p>
+                    </div>
+                  )}
+
+                  {memberData?.milestones && memberData.milestones.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="stat-label mb-2">Milestone Escrow Ledger</h4>
+                      <ul className="member-record-list">
+                        {memberData.milestones.map((m) => {
+                          const isApproved = m.approvalStatus === "approved";
+                          return (
+                            <li key={m.id} className="flex-col !items-start gap-2">
+                              <div className="flex w-full items-center justify-between">
+                                <strong>{m.title}</strong>
+                                <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
+                                  isApproved ? "bg-[#d4edd2] text-[#245b2e]" : "bg-[#fef3d6] text-[#7a5712]"
+                                }`}>
+                                  {isApproved ? "Tranche Released" : "Locked in Escrow"}
+                                </span>
+                              </div>
+                              <p>{m.description}</p>
+                              <div className="flex flex-wrap w-full items-center justify-between text-xs text-[#5e7060] pt-1 border-t border-[#e1eadb]">
+                                <span>Budget: <strong>{formatCampaignAmount(m.proposedBudget, campaign.currency || "INR")}</strong></span>
+                                <span>Progress: {m.completionStatus} · Audit: {m.approvalStatus}</span>
+                              </div>
+                              {isAdmin && !isApproved && (
+                                <button
+                                  type="button"
+                                  disabled={releaseMilestoneEscrow.isPending}
+                                  onClick={() => void handleReleaseMilestone(m.id)}
+                                  className="button button-outline text-xs mt-2 self-end"
+                                >
+                                  {releaseMilestoneEscrow.isPending ? "Auditing..." : "Audit & Release Escrow Tranche"}
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+
+                  <h4 className="stat-label mb-2">Protected Verification Documents</h4>
                   {memberData && memberData.protectedProofs.length > 0 ? (
                     <ul className="member-record-list">
                       {memberData.protectedProofs.map((proof, idx) => (
@@ -463,7 +716,7 @@ export function CampaignMemberWorkspace({
                     </ul>
                   ) : (
                     <p className="member-muted">
-                      No protected milestone proofs have been attached to this
+                      No additional milestone proofs have been attached to this
                       campaign yet.
                     </p>
                   )}

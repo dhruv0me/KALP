@@ -124,8 +124,29 @@ em { font-weight: 400; color: #789d65; }
 .dot-one { right: 14%; bottom: 38%; }
 .dot-two { left: 16%; top: 44%; width: 7px; height: 7px; background: #9fc180; }
 
-.scroll-indicator { position: absolute; bottom: 30px; left: 8%; display: inline-flex; align-items: center; gap: 10px; color: #697f6e; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; }
-.scroll-indicator:hover { color: #234c38; }
+.scroll-indicator {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #697f6e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-decoration: none !important;
+  border: 0;
+  transition: color 0.2s, transform 0.2s;
+}
+.scroll-indicator:hover {
+  color: #234c38;
+  transform: translateX(-50%) translateY(2px);
+}
+.scroll-indicator span {
+  text-decoration: none !important;
+}
 .hero-side-label { position: absolute; right: 2%; top: 46%; writing-mode: vertical-rl; color: #9ab09a; font-size: 8px; font-weight: 700; letter-spacing: 2px; }
 
 .intro-section, .how-section, .stats-section { padding: 85px 8%; max-width: 1440px; margin: auto; }
@@ -346,7 +367,7 @@ em { font-weight: 400; color: #789d65; }
   .hero-illustration-slot { justify-content: center; }
   .hero-art { height: 420px; margin-top: 10px; transform: scale(.85); transform-origin: center top; margin-bottom: -45px; }
   .hero-side-label { display: none; }
-  .scroll-indicator { left: 6%; bottom: 22px; }
+  .scroll-indicator { left: 50%; bottom: 18px; transform: translateX(-50%); }
   .intro-section, .how-section, .transparency-section, .stats-section { padding: 60px 6%; }
   .intro-grid { grid-template-columns: 1fr; gap: 25px; }
   .how-heading, .transparency-heading { display: block; }

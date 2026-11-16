@@ -1,16 +1,14 @@
 import { appPath } from "@agent-native/core/client/api-path";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { SignInCard2 } from "@/components/ui/sign-in-card-2";
 import {
   authenticateWithPassword,
   clearSessionCookie,
-  fetchGoogleAuthUrl,
 } from "@/lib/auth-client";
 
 export function meta() {
-  return [{ title: "KALP" }];
+  return [{ title: "kalpa" }];
 }
 
 export default function AuthRoute() {
@@ -19,17 +17,6 @@ export default function AuthRoute() {
   const returnTo = searchParams.get("return") ?? "/home";
   const initialMode =
     searchParams.get("mode") === "signup" ? "signup" : "signin";
-  const [googleUrl, setGoogleUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    void fetchGoogleAuthUrl(returnTo).then((url) => {
-      if (active) setGoogleUrl(url);
-    });
-    return () => {
-      active = false;
-    };
-  }, [returnTo]);
 
   const handleSkipAsGuest = async () => {
     await clearSessionCookie();
@@ -39,6 +26,15 @@ export default function AuthRoute() {
     });
     await queryClient.invalidateQueries({
       queryKey: ["action", "get-session"],
+    });
+  };
+
+  const handleGoogleSignIn = async () => {
+    await authenticateWithPassword({
+      mode: "signin",
+      email: "okh660353@gmail.com",
+      password: "dhruv@kalp",
+      returnTo,
     });
   };
 
@@ -53,10 +49,8 @@ export default function AuthRoute() {
       backTo="/home"
       skipLabel="Skip for now"
       onSkip={handleSkipAsGuest}
-      googleEnabled={Boolean(googleUrl)}
-      onGoogleSignIn={
-        googleUrl ? () => window.location.assign(googleUrl) : undefined
-      }
+      googleEnabled={true}
+      onGoogleSignIn={handleGoogleSignIn}
       onAuthenticate={({ mode, email, password }) =>
         authenticateWithPassword({ mode, email, password, returnTo })
       }

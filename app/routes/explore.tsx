@@ -18,7 +18,7 @@ import {
 
 export function meta() {
   return [
-    { title: "KALP" },
+    { title: "kalpa" },
     {
       name: "description",
       content:

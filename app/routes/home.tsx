@@ -18,7 +18,7 @@ import { usePlatformStats } from "@/hooks/use-campaigns";
 
 export function meta() {
   return [
-    { title: "KALP" },
+    { title: "kalpa" },
     {
       name: "description",
       content:

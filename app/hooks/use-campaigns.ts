@@ -88,3 +88,15 @@ export function usePostCampaignComment() {
 export function useSendCampaignChat() {
   return useActionMutation("send-campaign-chat");
 }
+
+export function useInitiateDonation() {
+  return useActionMutation("initiate-donation");
+}
+
+export function useVerifyPayment() {
+  return useActionMutation("verify-payment");
+}
+
+export function useReleaseMilestoneEscrow() {
+  return useActionMutation("release-milestone-escrow");
+}

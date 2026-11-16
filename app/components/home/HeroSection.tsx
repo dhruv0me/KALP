@@ -166,10 +166,6 @@ export function HeroSection({ illustration }: HeroSectionProps) {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <div className="eyebrow">
-          <span className="eyebrow-dot" />
-          A PLACE WHERE GOOD IDEAS FIND SUPPORT
-        </div>
         <h1>
           Big ideas need people
           <br />
@@ -188,12 +184,6 @@ export function HeroSection({ illustration }: HeroSectionProps) {
             {copy.hero.startCta} <IconArrowRight size={18} aria-hidden="true" />
           </Link>
         </div>
-        <div className="hero-note">
-          <span className="note-icon" aria-hidden="true">
-            <IconSparkles size={16} />
-          </span>
-          <span>Every number tells a real story.</span>
-        </div>
       </div>
 
       <div className="hero-illustration-slot">
@@ -209,7 +199,7 @@ export function HeroSection({ illustration }: HeroSectionProps) {
         }}
       >
         <span>{copy.hero.scrollIndicator}</span>
-        <IconArrowDown size={16} aria-hidden="true" />
+        <IconArrowDown size={15} aria-hidden="true" />
       </a>
       <span className="hero-side-label" aria-hidden="true">
         COMMUNITY CROWDFUNDING

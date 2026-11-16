@@ -8,5 +8,6 @@ export default createAuthPlugin({
     "/_agent-native/actions/get-campaign",
     "/_agent-native/actions/get-platform-stats",
     "/_agent-native/actions/get-session",
+    "/_agent-native/actions/initiate-donation",
   ],
 });

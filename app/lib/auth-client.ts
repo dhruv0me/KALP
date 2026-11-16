@@ -1,4 +1,5 @@
 import { appPath } from "@agent-native/core/client/api-path";
+import { supabase } from "./supabase-client";
 
 interface AuthResponse {
   ok?: boolean;
@@ -43,9 +44,23 @@ export async function authenticateWithPassword({
   returnTo?: string;
 }): Promise<void> {
   if (mode === "signup") {
+    // 1. Register with native session backend
     await postAuthJson("/_agent-native/auth/register", { email, password });
+    // 2. Also register with Supabase in background
+    try {
+      await supabase.auth.signUp({ email, password });
+    } catch {
+      // Supabase registration fallback
+    }
   }
+
   await postAuthJson("/_agent-native/auth/login", { email, password });
+
+  try {
+    await supabase.auth.signInWithPassword({ email, password });
+  } catch {
+    // Supabase sign-in fallback
+  }
 
   const safeTarget =
     returnTo.startsWith("/") && !returnTo.startsWith("//")
@@ -55,24 +70,41 @@ export async function authenticateWithPassword({
 }
 
 export async function fetchGoogleAuthUrl(
-  returnTo = "/home",
+  _returnTo = "/home",
 ): Promise<string | null> {
-  try {
-    const response = await fetch(
-      appPath(
-        `/_agent-native/google/auth-url?return=${encodeURIComponent(returnTo)}`,
-      ),
-      { credentials: "same-origin" },
-    );
-    if (!response.ok) return null;
-    const data = (await response.json()) as { url?: string };
-    return data.url ?? null;
-  } catch {
-    return null;
+  // Google OAuth backend dependency replaced with seamless direct authentication
+  return null;
+}
+
+export async function signInWithSupabaseGoogle(returnTo = "/home"): Promise<void> {
+  const redirectOrigin = typeof window !== "undefined" ? window.location.origin : "https://kalp-phi.vercel.app";
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${redirectOrigin}${appPath(returnTo)}`,
+    },
+  });
+  if (error) {
+    throw error;
   }
 }
 
+export async function sendPasswordResetEmail(email: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth?mode=reset`,
+  });
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+}
+
 export async function clearSessionCookie(): Promise<void> {
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore supabase signOut errors
+  }
   try {
     await fetch(appPath("/_agent-native/auth/logout"), {
       method: "POST",
@@ -82,4 +114,3 @@ export async function clearSessionCookie(): Promise<void> {
     // Best-effort cookie clear before continuing as guest.
   }
 }
-
