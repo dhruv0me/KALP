@@ -51,7 +51,8 @@ export default function ExploreRoute() {
             campaign.category === "Hackathon Projects"));
 
       const matchesCountry =
-        country === "All Countries" || campaign.country === country;
+        country === "All Countries" ||
+        campaign.country.trim().toLowerCase() === country.trim().toLowerCase();
 
       const matchesStatus =
         statusFilter === "all"

@@ -93,7 +93,12 @@ export default defineAction({
     if (input.deadline !== undefined) {
       patch.deadline = input.deadline?.trim() || null;
     }
-    if (input.status !== undefined) patch.status = input.status;
+    if (input.status !== undefined) {
+      patch.status = input.status;
+      if (input.status === "active") {
+        patch.approvalStatus = "approved";
+      }
+    }
     if (input.ownerName !== undefined) {
       patch.ownerName = input.ownerName?.trim() || null;
     }

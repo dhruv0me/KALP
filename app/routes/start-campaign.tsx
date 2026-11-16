@@ -4,6 +4,7 @@ import {
   IconCheck,
   IconPlant2,
   IconRocket,
+  IconShieldLock,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -50,6 +51,8 @@ export default function StartCampaignRoute() {
   const [imageUrl, setImageUrl] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [ownerContact, setOwnerContact] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [docUrl, setDocUrl] = useState("");
   const [proofTitle, setProofTitle] = useState("");
@@ -122,6 +125,12 @@ export default function StartCampaignRoute() {
         ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}),
         ...(ownerName.trim() ? { ownerName: ownerName.trim() } : {}),
         ...(ownerContact.trim() ? { ownerContact: ownerContact.trim() } : {}),
+        ...(institution.trim()
+          ? { coordinatorInstitution: institution.trim() }
+          : {}),
+        ...(studentId.trim()
+          ? { coordinatorIdNumber: studentId.trim() }
+          : {}),
         ...(docTitle.trim() && docUrl.trim()
           ? {
               restrictedDocuments: [
@@ -150,6 +159,8 @@ export default function StartCampaignRoute() {
       setImageUrl("");
       setOwnerName("");
       setOwnerContact("");
+      setInstitution("");
+      setStudentId("");
       setDocTitle("");
       setDocUrl("");
       setProofTitle("");
@@ -378,6 +389,49 @@ export default function StartCampaignRoute() {
                 onChange={(e) => setOwnerContact(e.target.value)}
               />
             </label>
+
+            <label className="creator-field">
+              <span>Institution / College (for verification)</span>
+              <input
+                type="text"
+                maxLength={160}
+                placeholder="e.g. Indian Institute of Technology Delhi"
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+              />
+            </label>
+
+            <label className="creator-field">
+              <span>Student / Faculty ID (confidential)</span>
+              <input
+                type="text"
+                maxLength={80}
+                placeholder="e.g. 2024CSB1089 (Encrypted &amp; Protected)"
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+              />
+            </label>
+
+            <div className="creator-field-full" style={{ gridColumn: "1 / -1" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.75rem",
+                  padding: "0.875rem 1rem",
+                  borderRadius: "0.5rem",
+                  background: "rgba(29, 62, 46, 0.05)",
+                  border: "1px solid rgba(29, 62, 46, 0.15)",
+                  fontSize: "0.85rem",
+                  color: "#1d3e2e",
+                }}
+              >
+                <IconShieldLock size={20} style={{ flexShrink: 0, marginTop: "2px" }} />
+                <div>
+                  <strong>Protected Credential Guarantee:</strong> Institutional IDs, student numbers, and coordinator contact details are stored securely in SQL audit logs and protected records. They are never published publicly or shared with third parties.
+                </div>
+              </div>
+            </div>
 
             <label className="creator-field">
               <span>Restricted Document Title (optional)</span>

@@ -3,7 +3,7 @@ import { and, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, schema } from "../server/db.js";
 
-export const PUBLIC_CAMPAIGN_STATUSES = ["published", "active", "completed"] as const;
+export const PUBLIC_CAMPAIGN_STATUSES = ["published", "active", "completed", "submitted"] as const;
 
 const campaignOutputSchema = z.object({
   id: z.string(),
@@ -27,7 +27,7 @@ export default defineAction({
     category: z.string().optional().describe("Optional campaign category filter"),
     country: z.string().optional().describe("Optional campaign country filter"),
     status: z
-      .enum(["published", "active", "completed"])
+      .enum(["published", "active", "completed", "submitted"])
       .optional()
       .describe("Optional public status filter"),
   }),
