@@ -18,11 +18,11 @@ import {
 
 export function meta() {
   return [
-    { title: "kalpa" },
+    { title: "Explore Campaigns — KALP" },
     {
       name: "description",
       content:
-        "Discover student projects, college events, hackathon builds, and campus startups. Real progress, shared openly.",
+        "Discover student projects, college events, hackathon builds, and campus startups backed by transparent milestone records on Ethereum.",
     },
   ];
 }

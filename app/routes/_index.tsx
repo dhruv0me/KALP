@@ -9,11 +9,11 @@ import {
 
 export function meta() {
   return [
-    { title: "kalpa" },
+    { title: "Sign in — KALP" },
     {
       name: "description",
       content:
-        "Sign in to KALP or continue as a guest to explore transparent campus crowdfunding.",
+        "Sign in to KALP or continue as a guest to explore transparent campus crowdfunding on Ethereum.",
     },
   ];
 }
@@ -54,7 +54,7 @@ export default function WelcomeAuthEntryRoute() {
       signUpTo="/auth?mode=signup"
       signInTo="/auth"
       backTo="/home"
-      skipLabel="Skip for now"
+      skipLabel="Skip for now (Continue as guest)"
       onSkip={handleSkipAsGuest}
       googleEnabled={true}
       onGoogleSignIn={handleGoogleSignIn}

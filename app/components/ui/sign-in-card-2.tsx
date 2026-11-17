@@ -91,7 +91,7 @@ export function Component({
   initialMode = "signin",
   forgotPasswordTo,
   backTo = "/home",
-  skipLabel = "Skip for now",
+  skipLabel = "Skip for now (Continue as guest)",
   onSkip,
   onAuthenticate,
   onGoogleSignIn,
@@ -100,9 +100,7 @@ export function Component({
 }: SignInCardProps = {}) {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
-  const [emailFormOpen, setEmailFormOpen] = useState(
-    initialMode === "signup",
-  );
+  const [emailFormOpen, setEmailFormOpen] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

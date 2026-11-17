@@ -45,10 +45,22 @@ export function Footer() {
           </Link>
           <Link to="/explore">{copy.nav.explore}</Link>
           <Link to="/start-campaign">{copy.footer.startCta}</Link>
+          <Link to="/auth">{copy.nav.login ?? "Sign in"}</Link>
         </div>
         <div className="footer-contact">
           <strong>{copy.footer.contactTitle}</strong>
           <span>{copy.footer.contactBody}</span>
+          <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
+            <a
+              href="mailto:support@kalp.fund"
+              style={{ color: "#2c6548", fontWeight: 700, fontSize: "12px", textDecoration: "underline" }}
+            >
+              support@kalp.fund
+            </a>
+            <span style={{ fontSize: "11px", color: "#6c8471" }}>
+              Campus partnerships &amp; inquiries: contact@kalp.fund
+            </span>
+          </div>
         </div>
       </div>
       <div className="footer-bottom">

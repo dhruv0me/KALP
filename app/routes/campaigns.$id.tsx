@@ -11,6 +11,7 @@ import {
   CampaignMemberWorkspace,
   type ProtectedIntentKey,
 } from "@/components/campaigns/CampaignMemberWorkspace";
+import { CampaignScrollStory } from "@/components/campaigns/CampaignScrollStory";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaign } from "@/hooks/use-campaigns";
@@ -18,7 +19,7 @@ import { useSession } from "@/hooks/use-session";
 import { formatCampaignAmount, getFundingProgress } from "@/lib/campaigns";
 
 export function meta() {
-  return [{ title: "kalpa" }];
+  return [{ title: "Campaign Details — KALP" }];
 }
 
 export default function CampaignDetailsRoute() {
@@ -110,8 +111,6 @@ export default function CampaignDetailsRoute() {
             />
           )}
 
-          <p className="detail-description">{campaign.description}</p>
-
           {(campaign.collectedAmount != null || campaign.targetAmount != null) && (
             <div className="detail-funding-box">
               {progress != null && (
@@ -151,6 +150,9 @@ export default function CampaignDetailsRoute() {
               </p>
             </div>
           )}
+
+          {/* Interactive Scroll Story: Title convergence, Milestones 30/30/40, Proof Ledger */}
+          <CampaignScrollStory campaign={campaign} />
 
           <CampaignMemberWorkspace
             campaign={campaign}

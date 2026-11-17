@@ -22,7 +22,7 @@ import {
 } from "@/lib/campaigns";
 
 export function meta() {
-  return [{ title: "kalpa" }];
+  return [{ title: "Start a Campaign — KALP" }];
 }
 
 export default function StartCampaignRoute() {

@@ -9,6 +9,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { Logo } from "@/components/layout/Logo";
@@ -16,25 +17,35 @@ import { UserAvatar } from "@/components/layout/UserAvatar";
 import { useLanguage } from "@/hooks/use-language";
 import { useSession } from "@/hooks/use-session";
 import { clearSessionCookie } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 export function scrollToSectionId(id: string) {
-  if (typeof window !== "undefined" && window.scrollY !== 0) {
-    window.scrollTo({ top: 0, behavior: "instant" });
+  if (id === "home") {
+    // @ts-expect-error lenis attached to window
+    if (typeof window !== "undefined" && window.__lenis) {
+      // @ts-expect-error lenis
+      window.__lenis.scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    return;
   }
 
-  const main = document.querySelector<HTMLElement>(".agent-native-app-main");
-
   if (id === "contact") {
-    if (main) {
-      main.scrollTo({
-        top: main.scrollHeight,
-        behavior: "smooth",
-      });
-      return;
-    }
     const target = document.getElementById("contact");
     if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "end" });
+      // @ts-expect-error lenis attached to window
+      if (typeof window !== "undefined" && window.__lenis) {
+        // @ts-expect-error lenis
+        window.__lenis.scrollTo(target, { duration: 1.2 });
+      } else {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: "smooth",
+      });
     }
     return;
   }
@@ -42,34 +53,96 @@ export function scrollToSectionId(id: string) {
   const target = document.getElementById(id);
   if (!target) return;
 
-  if (main) {
-    const mainRect = main.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const targetTop = targetRect.top - mainRect.top + main.scrollTop;
+  const rect = target.getBoundingClientRect();
+  const targetTop = rect.top + window.pageYOffset;
+  // For tall pinned sections (> 900px), scroll slightly into the stage where elements are centered and assembled
+  const scrollOffset = target.offsetHeight > 900 ? window.innerHeight * 0.38 : 0;
+  const destination = Math.max(0, targetTop + scrollOffset - 72);
 
-    main.scrollTo({
-      top: Math.max(0, targetTop - 70),
-      behavior: "smooth",
-    });
-    return;
+  // @ts-expect-error lenis attached to window
+  if (typeof window !== "undefined" && window.__lenis) {
+    // @ts-expect-error lenis
+    window.__lenis.scrollTo(destination, { duration: 1.2 });
+  } else {
+    window.scrollTo({ top: destination, behavior: "smooth" });
   }
-
-  target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("home");
+
   const langPickerRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { pathname, hash } = useLocation();
+  const { pathname } = useLocation();
   const { authenticated, email } = useSession();
   const { code, language, languages, copy, setLanguage } = useLanguage();
   const signInHref = "/auth";
 
+  // Active section scroll spy to match navbar links dynamically
+  useEffect(() => {
+    if (pathname === "/explore") {
+      setActiveSection("explore");
+      return;
+    }
+
+    if (pathname !== "/home" && pathname !== "/home/") {
+      setActiveSection("");
+      return;
+    }
+
+    let rafId: number | null = null;
+
+    const handleScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+
+        // Bottom / contact check
+        if (windowHeight + scrollY >= docHeight - 240) {
+          setActiveSection("contact");
+          return;
+        }
+
+        const sections = [
+          { id: "transparency", el: document.getElementById("blockchain") },
+          { id: "transparency", el: document.getElementById("transparency") },
+          { id: "how-it-works", el: document.getElementById("how-it-works") },
+          { id: "about", el: document.getElementById("about") },
+        ];
+
+        let matched = "home";
+        for (const sec of sections) {
+          if (!sec.el) continue;
+          const rect = sec.el.getBoundingClientRect();
+          // Check if top of section is at or above middle of viewport
+          if (rect.top <= windowHeight * 0.45 && rect.bottom >= 100) {
+            matched = sec.id;
+            break;
+          }
+        }
+
+        setActiveSection(matched);
+      });
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [pathname]);
+
+  // Click outside menus
   useEffect(() => {
     if (!langOpen && !userMenuOpen) return;
 
@@ -121,6 +194,7 @@ export function Navbar() {
   ) => {
     setOpen(false);
     event.preventDefault();
+    setActiveSection(sectionId);
     if (pathname === "/home" || pathname === "/home/") {
       scrollToSectionId(sectionId);
     } else {
@@ -128,7 +202,14 @@ export function Navbar() {
     }
   };
 
-  const isHomeRoute = pathname === "/home" || pathname === "/home/";
+  const navItems = [
+    { id: "home", label: copy.nav.home, to: "/home" },
+    { id: "about", label: copy.nav.about, to: "/home#about" },
+    { id: "how-it-works", label: copy.nav.howItWorks, to: "/home#how-it-works" },
+    { id: "transparency", label: copy.nav.transparency ?? "Transparency", to: "/home#transparency" },
+    { id: "explore", label: copy.nav.explore, to: "/explore" },
+    { id: "contact", label: copy.nav.contact, to: "/home#contact" },
+  ];
 
   return (
     <header className="site-header">
@@ -139,44 +220,43 @@ export function Navbar() {
           className={open ? "nav-links open" : "nav-links"}
           aria-label="Main navigation"
         >
-          <Link
-            onClick={() => setOpen(false)}
-            to="/home"
-            aria-current={isHomeRoute && !hash ? "page" : undefined}
-          >
-            {copy.nav.home}
-          </Link>
-          <Link
-            to="/home#about"
-            onClick={(event) => handleSectionClick(event, "about")}
-          >
-            {copy.nav.about}
-          </Link>
-          <Link
-            to="/home#how-it-works"
-            onClick={(event) => handleSectionClick(event, "how-it-works")}
-          >
-            {copy.nav.howItWorks}
-          </Link>
-          <Link
-            to="/home#transparency"
-            onClick={(event) => handleSectionClick(event, "transparency")}
-          >
-            {copy.nav.transparency ?? "Transparency"}
-          </Link>
-          <Link
-            onClick={() => setOpen(false)}
-            to="/explore"
-            aria-current={pathname === "/explore" ? "page" : undefined}
-          >
-            {copy.nav.explore}
-          </Link>
-          <Link
-            to="/home#contact"
-            onClick={(event) => handleSectionClick(event, "contact")}
-          >
-            {copy.nav.contact}
-          </Link>
+          {navItems.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <Link
+                key={item.id}
+                to={item.to}
+                onClick={(event) => {
+                  if (item.id === "explore") {
+                    setOpen(false);
+                    setActiveSection("explore");
+                    return;
+                  }
+                  handleSectionClick(event, item.id);
+                }}
+                className={cn(
+                  "relative py-1 px-0.5 text-xs font-semibold tracking-wide transition-colors duration-200 no-underline",
+                  isActive
+                    ? "text-[#173d2e] font-bold"
+                    : "text-[#4a5f51] hover:text-[#173d2e]"
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <span>{item.label}</span>
+                {isActive && (
+                  <motion.span
+                    layoutId="activeNavUnderline"
+                    className="absolute -bottom-1 left-0 right-0 h-[2.5px] rounded-full bg-[#2c6548]"
+                    transition={{
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 32,
+                    }}
+                  />
+                )}
+              </Link>
+            );
+          })}
 
           <div className="mobile-nav-actions">
             {authenticated ? (
@@ -215,15 +295,12 @@ export function Navbar() {
               onClick={() => setLangOpen((prev) => !prev)}
               aria-haspopup="listbox"
               aria-expanded={langOpen}
-              aria-label={`${copy.nav.language}: ${language.name} (${language.nativeName})`}
-              title={`${language.nativeName} · ${language.region}`}
+              aria-label={`${copy.nav.language}: ${language.name}`}
+              title={`${language.name} (${language.nativeName}) · ${language.region}`}
             >
               <IconWorld size={16} aria-hidden="true" />
-              <span className="language-trigger-code">
-                {language.code.toUpperCase()}
-              </span>
               <span className="language-trigger-native">
-                {language.nativeName}
+                {language.name}
               </span>
               <IconChevronDown
                 size={14}

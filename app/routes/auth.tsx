@@ -8,7 +8,7 @@ import {
 } from "@/lib/auth-client";
 
 export function meta() {
-  return [{ title: "kalpa" }];
+  return [{ title: "Sign in — KALP" }];
 }
 
 export default function AuthRoute() {
@@ -47,7 +47,7 @@ export default function AuthRoute() {
       signUpTo="/auth?mode=signup"
       signInTo="/auth"
       backTo="/home"
-      skipLabel="Skip for now"
+      skipLabel="Skip for now (Continue as guest)"
       onSkip={handleSkipAsGuest}
       googleEnabled={true}
       onGoogleSignIn={handleGoogleSignIn}

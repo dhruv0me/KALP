@@ -36,6 +36,16 @@ export const CAMPAIGN_STATUS_FILTERS = [
 export type CampaignStatusFilter =
   (typeof CAMPAIGN_STATUS_FILTERS)[number]["value"];
 
+export interface CampaignMilestone {
+  id: string;
+  title: string;
+  description: string;
+  proposedBudget: number;
+  deadline?: string | null;
+  completionStatus: string;
+  approvalStatus: string;
+}
+
 export interface Campaign {
   id: string;
   title: string;
@@ -49,6 +59,9 @@ export interface Campaign {
   donorCount: number | null;
   deadline: string | null;
   status: string;
+  restrictedDocuments?: string | null;
+  protectedProofs?: string | null;
+  milestones?: CampaignMilestone[];
 }
 
 export interface PlatformStatsData {
